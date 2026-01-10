@@ -9,9 +9,11 @@ function Navbar() {
   const location = useLocation()
   const { currentUser, signout, isAdmin, userName } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
   const dropdownRef = useRef<HTMLLIElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
   const [pendingAppointmentsCount, setPendingAppointmentsCount] = useState(0)
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
 
@@ -97,16 +99,35 @@ function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false)
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        // Check if click is not on hamburger button
+        const target = event.target as HTMLElement
+        if (!target.closest('[data-hamburger]')) {
+          setMobileMenuOpen(false)
+        }
+      }
     }
 
-    if (dropdownOpen) {
+    if (dropdownOpen || mobileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [dropdownOpen])
+  }, [dropdownOpen, mobileMenuOpen])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
 
   // Calculate dropdown position before paint to prevent layout shifts
   useLayoutEffect(() => {
@@ -121,11 +142,13 @@ function Navbar() {
 
   return (
     <nav className="bg-white/95 backdrop-blur-[10px] shadow-[0_2px_8px_rgba(91,163,208,0.1)] sticky top-0 z-[1000] border-b border-[rgba(212,228,212,0.5)]">
-      <div className="max-w-[1200px] mx-auto px-8 py-4 md:px-4 md:flex md:flex-col md:gap-4 flex justify-between items-center w-full box-border flex-nowrap">
-        <Link to="/" className="no-underline text-text-dark flex items-center transition-transform duration-300 flex-shrink-0 hover:-translate-y-0.5">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center w-full box-border">
+        <Link to="/" className="no-underline text-text-dark flex items-center transition-transform duration-300 flex-shrink-0 hover:-translate-y-0.5" onClick={() => setMobileMenuOpen(false)}>
           <Logo size="small" showText={true} />
         </Link>
-        <ul className="flex list-none gap-8 md:gap-4 md:flex-wrap md:justify-center items-center m-0 p-0 flex-shrink-0 flex-nowrap">
+        
+        {/* Desktop Navigation */}
+        <ul className="hidden lg:flex list-none gap-6 xl:gap-8 items-center m-0 p-0 flex-shrink-0">
           <li>
             <Link to="/" className={`no-underline text-text-dark font-medium transition-colors duration-300 py-2 relative hover:text-primary ${isActive('/') === 'active' ? 'text-primary after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary' : ''}`}>
               Home
@@ -144,7 +167,7 @@ function Navbar() {
           {currentUser ? (
             <>
               <li>
-                <span className="text-text-dark font-medium py-2 text-[0.95rem] md:text-[0.85rem]">Hello, {userName}</span>
+                <span className="text-text-dark font-medium py-2 text-sm">Hello, {userName}</span>
               </li>
               <li ref={dropdownRef} className="relative flex-shrink-0" style={{ position: 'relative', isolation: 'isolate' }}>
                 <button 
@@ -215,7 +238,7 @@ function Navbar() {
                 </li>
               )}
               <li>
-                <button onClick={handleSignOut} className="bg-text-light text-white py-2 px-6 rounded-lg font-semibold text-[0.95rem] transition-all duration-300 border-none cursor-pointer font-inherit hover:bg-text-dark hover:-translate-y-0.5 hover:shadow-custom">
+                <button onClick={handleSignOut} className="bg-text-light text-white py-2 px-6 rounded-lg font-semibold text-sm transition-all duration-300 border-none cursor-pointer font-inherit hover:bg-text-dark hover:-translate-y-0.5 hover:shadow-custom">
                   Sign Out
                 </button>
               </li>
@@ -235,7 +258,133 @@ function Navbar() {
             </>
           )}
         </ul>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          data-hamburger
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden bg-transparent border-none cursor-pointer p-2 flex flex-col gap-1.5 transition-all duration-300 hover:opacity-70"
+          aria-label="Toggle mobile menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          <span className={`block w-6 h-0.5 bg-text-dark transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+          <span className={`block w-6 h-0.5 bg-text-dark transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+          <span className={`block w-6 h-0.5 bg-text-dark transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      <div
+        ref={mobileMenuRef}
+        className={`lg:hidden fixed inset-0 top-[73px] bg-white z-[999] transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        } overflow-y-auto`}
+      >
+        <div className="flex flex-col p-4 space-y-4">
+          <Link
+            to="/"
+            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            to="/about"
+            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/about') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About
+          </Link>
+          <Link
+            to="/contact"
+            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/contact') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Contact Us
+          </Link>
+          
+          {currentUser ? (
+            <>
+              <div className="pt-4 border-t border-border mt-2">
+                <div className="px-4 py-2 text-text-dark font-medium text-sm">
+                  Hello, {userName}
+                </div>
+                <Link
+                  to="/profile"
+                  className={`block text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/profile') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/appointments"
+                  className={`flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/appointments') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Appointments
+                  {pendingAppointmentsCount > 0 && (
+                    <span className="bg-nature-gradient text-white rounded-xl py-[0.15rem] px-2 text-xs font-bold min-w-[20px] text-center">{pendingAppointmentsCount}</span>
+                  )}
+                </Link>
+                <Link
+                  to="/messages"
+                  className={`flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/messages') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Messages
+                  {unreadMessagesCount > 0 && (
+                    <span className="bg-nature-gradient text-white rounded-xl py-[0.15rem] px-2 text-xs font-bold min-w-[20px] text-center">{unreadMessagesCount}</span>
+                  )}
+                </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/admin') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    handleSignOut()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full mt-4 bg-text-light text-white py-3 px-6 rounded-lg font-semibold text-sm transition-all duration-300 border-none cursor-pointer hover:bg-text-dark"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/signin"
+                className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/signin') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/signup"
+                className={`bg-nature-gradient text-white py-3 px-4 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom no-underline text-center ${isActive('/signup') === 'active' ? 'bg-gradient-to-br from-primary-dark to-secondary' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay - positioned behind menu */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-[998]"
+          onClick={() => setMobileMenuOpen(false)}
+          style={{ top: '73px' }}
+        />
+      )}
     </nav>
   )
 }

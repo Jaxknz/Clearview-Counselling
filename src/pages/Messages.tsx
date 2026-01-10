@@ -180,7 +180,7 @@ function Messages() {
         )}
       </div>
 
-      <div className="max-w-[1600px] mx-auto bg-gradient-to-br from-white via-primary/5 to-sky/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col h-[calc(100vh-250px)] max-h-[800px] border border-border">
+      <div className="max-w-[1600px] mx-auto bg-gradient-to-br from-white via-primary/5 to-sky/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col min-h-[500px] h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[calc(100vh-250px)] max-h-[800px] border border-border">
         <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-primary/15 via-sky/10 to-nature-green/10">
           <h2 className="text-text-dark text-2xl font-semibold">Inbox</h2>
         </div>

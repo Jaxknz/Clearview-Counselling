@@ -678,7 +678,7 @@ function Admin() {
 
       <div className="bg-gradient-to-r from-white via-bg-light to-white border-b-2 border-border overflow-x-auto">
         <div className="flex justify-center">
-          <div className="flex">
+          <div className="flex min-w-full sm:min-w-0">
             <button 
               className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'clients' 
@@ -730,11 +730,11 @@ function Admin() {
       </div>
 
       {activeTab === 'clients' && (
-        <div className="max-w-[1600px] mx-auto px-8 py-6">
-          <div className="flex h-[calc(100vh-250px)] gap-6">
-            <div className="w-80 bg-gradient-to-b from-primary/10 via-sky/10 to-white border-r-2 border-border flex-shrink-0 flex flex-col rounded-l-xl shadow-custom-lg">
-              <div className="p-6 border-b-2 border-border flex-shrink-0 bg-gradient-to-r from-primary/15 to-sky/10">
-                <h2 className="text-text-dark text-2xl mb-4 font-semibold">Clients ({clients.length})</h2>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-250px)] gap-4 lg:gap-6">
+            <div className="lg:w-80 w-full lg:flex-shrink-0 bg-gradient-to-b from-primary/10 via-sky/10 to-white lg:border-r-2 border-b-2 lg:border-b-0 border-border flex flex-col lg:rounded-l-xl rounded-lg shadow-custom-lg lg:max-h-none max-h-[300px] overflow-hidden lg:overflow-visible">
+              <div className="p-4 sm:p-6 border-b-2 border-border flex-shrink-0 bg-gradient-to-r from-primary/15 to-sky/10">
+                <h2 className="text-text-dark text-xl sm:text-2xl mb-4 font-semibold">Clients ({clients.length})</h2>
                 <input
                   type="text"
                   placeholder="Search by name..."
@@ -743,7 +743,7 @@ function Admin() {
                   className="w-full py-2 px-3 border-2 border-border rounded-lg text-sm transition-all duration-300 font-inherit bg-white/90 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none focus:bg-white"
                 />
               </div>
-              <div className="flex-1 overflow-y-auto p-4 bg-white/60">
+              <div className="flex-1 overflow-y-auto p-4 bg-white/60 lg:block">
                 {loading ? (
                   <p className="text-text-light text-center py-8">Loading clients...</p>
                 ) : (
@@ -786,8 +786,8 @@ function Admin() {
               </div>
             </div>
 
-            <div className="flex-1 min-w-0 overflow-y-auto">
-              <div className="h-full bg-gradient-to-br from-white via-bg-light to-primary/5 p-8 rounded-r-xl shadow-custom-lg border border-border">
+            <div className="flex-1 min-w-0 overflow-y-auto lg:overflow-y-auto">
+              <div className="min-h-full bg-gradient-to-br from-white via-bg-light to-primary/5 p-4 sm:p-6 lg:p-8 lg:rounded-r-xl rounded-lg shadow-custom-lg border border-border">
             {selectedClient ? (
               <div>
                 <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-4 border-b-2 border-border bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg -mx-4 -mt-4">Client Details</h2>
@@ -1271,16 +1271,16 @@ function Admin() {
       )}
 
       {activeTab === 'calendar' && (
-        <div className="max-w-[1400px] mx-auto px-8 py-6">
-          <div className="w-full bg-gradient-to-br from-white via-sky/10 to-nature-green/10 p-8 rounded-2xl shadow-custom-lg border border-border">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="w-full bg-gradient-to-br from-white via-sky/10 to-nature-green/10 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-custom-lg border border-border">
             <AdminCalendar clients={clients} />
           </div>
         </div>
       )}
 
       {activeTab === 'messages' && (
-        <div className="max-w-[1600px] mx-auto px-8 py-6">
-          <div className="w-full bg-gradient-to-br from-white via-sky/20 to-nature-green/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col h-[calc(100vh-250px)] max-h-[800px] border border-border">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="w-full bg-gradient-to-br from-white via-sky/20 to-nature-green/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col min-h-[500px] h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[calc(100vh-250px)] max-h-[800px] border border-border">
             <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-primary/15 via-sky/10 to-nature-green/10">
               <h2 className="text-text-dark text-2xl font-semibold">Messages from Users</h2>
             </div>
@@ -1393,8 +1393,8 @@ function Admin() {
       )}
 
       {activeTab === 'contactMessages' && (
-        <div className="max-w-[1600px] mx-auto px-8 py-6">
-          <div className="w-full bg-gradient-to-br from-white via-nature-green/10 to-earth/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col h-[calc(100vh-250px)] max-h-[800px] border border-border">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="w-full bg-gradient-to-br from-white via-nature-green/10 to-earth/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col min-h-[500px] h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[calc(100vh-250px)] max-h-[800px] border border-border">
             <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-nature-green/15 via-secondary/10 to-earth/10">
               <h2 className="text-text-dark text-2xl font-semibold">Contact Form Messages</h2>
             </div>

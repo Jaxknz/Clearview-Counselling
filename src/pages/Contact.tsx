@@ -91,8 +91,8 @@ function Contact() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-text-dark text-xl mb-2 font-semibold">Email</h3>
-                  <a href="mailto:info@clearviewcounselling.com" className="text-primary no-underline text-lg hover:text-primary-dark transition-colors duration-300 font-medium">
-                    info@clearviewcounselling.com
+                  <a href="mailto:info@clearviewcounselling.co.nz" className="text-primary no-underline text-lg hover:text-primary-dark transition-colors duration-300 font-medium">
+                    info@clearviewcounselling.co.nz
                   </a>
                 </div>
               </div>

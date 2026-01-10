@@ -276,28 +276,28 @@ function Navbar() {
       {/* Mobile Menu */}
       <div
         ref={mobileMenuRef}
-        className={`lg:hidden fixed inset-0 top-[73px] bg-white z-[999] transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-white z-[999] transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-lg ${
           mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        } overflow-y-auto`}
+        }`}
       >
-        <div className="flex flex-col p-4 space-y-4">
+        <div className="flex flex-col p-6 space-y-1">
           <Link
             to="/"
-            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            className="text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
             onClick={() => setMobileMenuOpen(false)}
           >
             Home
           </Link>
           <Link
             to="/about"
-            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/about') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            className="text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
             onClick={() => setMobileMenuOpen(false)}
           >
             About
           </Link>
           <Link
             to="/contact"
-            className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/contact') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+            className="text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
             onClick={() => setMobileMenuOpen(false)}
           >
             Contact Us
@@ -307,31 +307,31 @@ function Navbar() {
             <>
               <div className="pt-4 border-t border-border mt-2">
                 <div className="px-4 py-2 text-text-dark font-medium text-sm">
-                  Hello, {userName}
+                  Hello, {userName || currentUser.email || 'User'}
                 </div>
                 <Link
                   to="/profile"
-                  className={`block text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/profile') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  className="block text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Profile
                 </Link>
                 <Link
                   to="/appointments"
-                  className={`flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/appointments') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  className="flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Appointments
+                  <span>Appointments</span>
                   {pendingAppointmentsCount > 0 && (
                     <span className="bg-nature-gradient text-white rounded-xl py-[0.15rem] px-2 text-xs font-bold min-w-[20px] text-center">{pendingAppointmentsCount}</span>
                   )}
                 </Link>
                 <Link
                   to="/messages"
-                  className={`flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/messages') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                  className="flex items-center justify-between text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Messages
+                  <span>Messages</span>
                   {unreadMessagesCount > 0 && (
                     <span className="bg-nature-gradient text-white rounded-xl py-[0.15rem] px-2 text-xs font-bold min-w-[20px] text-center">{unreadMessagesCount}</span>
                   )}
@@ -339,7 +339,7 @@ function Navbar() {
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/admin') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                    className="block text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Admin
@@ -360,14 +360,14 @@ function Navbar() {
             <>
               <Link
                 to="/signin"
-                className={`text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary ${isActive('/signin') === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+                className="text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className={`bg-nature-gradient text-white py-3 px-4 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom no-underline text-center ${isActive('/signup') === 'active' ? 'bg-gradient-to-br from-primary-dark to-secondary' : ''}`}
+                className="bg-nature-gradient text-white py-3 px-4 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom no-underline text-center font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Sign Up
@@ -378,13 +378,12 @@ function Navbar() {
       </div>
 
       {/* Mobile Menu Overlay - positioned behind menu */}
-      {mobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-[998]"
-          onClick={() => setMobileMenuOpen(false)}
-          style={{ top: '73px' }}
-        />
-      )}
+      <div
+        className={`lg:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-black/50 z-[998] transition-opacity duration-300 ${
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
     </nav>
   )
 }

@@ -271,7 +271,7 @@ function Messages() {
                           onClick={() => {
                             setReplying(false)
                             setReplyContent('')
-                            setMessage(null)
+                            setSelectedMessage(null)
                           }}
                         >
                           Cancel

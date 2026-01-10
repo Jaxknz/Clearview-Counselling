@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
-import { collection, query, getDocs, doc, updateDoc, addDoc, where, orderBy, Timestamp, getDoc } from 'firebase/firestore'
+import { collection, query, getDocs, doc, updateDoc, addDoc, where, Timestamp, getDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import ConfirmDialog from '../components/ConfirmDialog'
 import './MyAppointments.css'
@@ -23,6 +23,7 @@ interface Appointment {
 
 function MyAppointments() {
   const { currentUser } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all')
@@ -33,6 +34,18 @@ function MyAppointments() {
   const [bookingNotes, setBookingNotes] = useState('')
   const [bookingLoading, setBookingLoading] = useState(false)
   const [userData, setUserData] = useState<{ firstName: string; lastName: string; email: string; phone: string } | null>(null)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type?: 'warning' | 'danger' | 'info'
+    onConfirm?: () => void | Promise<void>
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'warning'
+  })
 
   const timeSlots = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -134,24 +147,6 @@ function MyAppointments() {
     }
   }
 
-  const handleConfirmAppointment = async (appointmentId: string) => {
-    if (!currentUser) return
-
-    try {
-      const appointmentRef = doc(db, 'appointments', appointmentId)
-      await updateDoc(appointmentRef, {
-        status: 'confirmed',
-        confirmedAt: Timestamp.now()
-      })
-      
-      // Reload appointments
-      loadAppointments()
-      showSuccess('Appointment confirmed successfully!')
-    } catch (error) {
-      console.error('Error confirming appointment:', error)
-      showError('Failed to confirm appointment. Please try again.')
-    }
-  }
 
   const handleCancelAppointment = async (appointmentId: string) => {
     setConfirmDialog({
@@ -557,14 +552,16 @@ function MyAppointments() {
           </div>
         )}
       </div>
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        type={confirmDialog.type}
-      />
+      {confirmDialog.isOpen && confirmDialog.onConfirm && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          type={confirmDialog.type}
+        />
+      )}
     </div>
   )
 }

@@ -195,8 +195,9 @@ function Payment() {
                     }}
                   >
                     <PayPalButtons
-                      createOrder={(data, actions) => {
+                      createOrder={(_data, actions) => {
                         return actions.order.create({
+                          intent: 'CAPTURE',
                           purchase_units: [
                             {
                               description: planName,
@@ -208,8 +209,8 @@ function Payment() {
                           ],
                         })
                       }}
-                      onApprove={(data, actions) => {
-                        return actions.order!.capture().then((details) => {
+                      onApprove={(_data, actions) => {
+                        return actions.order!.capture().then((_details) => {
                           handlePaymentSuccess()
                         })
                       }}

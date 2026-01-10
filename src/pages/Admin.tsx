@@ -39,7 +39,7 @@ type AdminTab = 'clients' | 'calendar' | 'messages' | 'contactMessages'
 
 function Admin() {
   const { currentUser, signout, isAdmin, loading: authLoading, userName } = useAuth()
-  const { showSuccess, showError, showWarning } = useToast()
+  const { showSuccess, showError } = useToast()
   const [activeTab, setActiveTab] = useState<AdminTab>('clients')
   const [clients, setClients] = useState<ClientData[]>([])
   const [selectedClient, setSelectedClient] = useState<ClientData | null>(null)

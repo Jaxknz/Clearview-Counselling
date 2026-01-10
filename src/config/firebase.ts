@@ -1,7 +1,7 @@
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
+import { initializeApp, FirebaseApp } from 'firebase/app'
+import { getAuth, Auth } from 'firebase/auth'
+import { getFirestore, Firestore } from 'firebase/firestore'
+import { getStorage, FirebaseStorage } from 'firebase/storage'
 
 // Validate environment variables
 const requiredEnvVars = {
@@ -57,16 +57,16 @@ const firebaseConfig = {
 }
 
 // Initialize Firebase
-let app
-let auth
-let db
-let storage
+let app: FirebaseApp
+let auth: Auth
+let db: Firestore
+let storageInstance: FirebaseStorage
 
 try {
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
   db = getFirestore(app)
-  storage = getStorage(app)
+  storageInstance = getStorage(app)
 } catch (error) {
   console.error('Firebase initialization error:', error)
   throw new Error('Failed to initialize Firebase. Please check your configuration.')
@@ -79,7 +79,7 @@ export { auth }
 export { db }
 
 // Initialize Firebase Storage and get a reference to the service
-export { storage }
+export { storageInstance as storage }
 
 export default app
 

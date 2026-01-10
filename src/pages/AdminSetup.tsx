@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import './AdminSetup.css'
 

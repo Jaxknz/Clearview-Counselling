@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore'
+import { collection, query, getDocs, where } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import './NotificationBell.css'
 
@@ -12,7 +12,6 @@ function NotificationBell({ onClick }: NotificationBellProps) {
   const { currentUser } = useAuth()
   const [pendingAppointments, setPendingAppointments] = useState(0)
   const [unreadMessages, setUnreadMessages] = useState(0)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (currentUser) {
@@ -23,7 +22,6 @@ function NotificationBell({ onClick }: NotificationBellProps) {
     } else {
       setPendingAppointments(0)
       setUnreadMessages(0)
-      setLoading(false)
     }
   }, [currentUser])
 
@@ -31,8 +29,6 @@ function NotificationBell({ onClick }: NotificationBellProps) {
     if (!currentUser) return
 
     try {
-      setLoading(true)
-      
       // Load pending appointments
       try {
         const appointmentsRef = collection(db, 'appointments')
@@ -100,8 +96,6 @@ function NotificationBell({ onClick }: NotificationBellProps) {
       }
     } catch (error) {
       console.error('Error loading notifications:', error)
-    } finally {
-      setLoading(false)
     }
   }
 

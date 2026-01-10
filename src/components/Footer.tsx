@@ -1,37 +1,36 @@
 import { Link } from 'react-router-dom'
-import './Footer.css'
 
 function Footer() {
   return (
-    <footer className="footer">
-      <div className="footer-container">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>Clearview Counselling</h3>
-            <p>Professional counselling services to help you navigate life's challenges.</p>
+    <footer className="bg-gradient-to-b from-forest to-[#5A6B5A] text-white mt-auto py-12 px-8 md:py-8 md:px-4 relative overflow-hidden before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.03)_0%,transparent_50%)] before:pointer-events-none">
+      <div className="relative z-10 max-w-[1200px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 mb-8">
+          <div>
+            <h3 className="text-2xl md:text-xl mb-4 text-white font-bold">Clearview Counselling</h3>
+            <p className="text-white/80 leading-relaxed">Professional counselling services to help you navigate life's challenges.</p>
           </div>
 
-          <div className="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/contact">Contact Us</Link></li>
-              <li><Link to="/signup">Sign Up</Link></li>
+          <div>
+            <h4 className="text-lg mb-4 text-white">Quick Links</h4>
+            <ul className="list-none p-0 m-0">
+              <li className="mb-3"><Link to="/" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">Home</Link></li>
+              <li className="mb-3"><Link to="/about" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">About Us</Link></li>
+              <li className="mb-3"><Link to="/contact" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">Contact Us</Link></li>
+              <li className="mb-3"><Link to="/signup" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">Sign Up</Link></li>
             </ul>
           </div>
 
-          <div className="footer-section">
-            <h4>Legal</h4>
-            <ul>
-              <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-              <li><Link to="/terms-and-conditions">Terms and Conditions</Link></li>
+          <div>
+            <h4 className="text-lg mb-4 text-white">Legal</h4>
+            <ul className="list-none p-0 m-0">
+              <li className="mb-3"><Link to="/privacy-policy" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">Privacy Policy</Link></li>
+              <li className="mb-3"><Link to="/terms-and-conditions" className="text-white/80 no-underline transition-colors duration-300 text-[0.95rem] hover:text-primary">Terms and Conditions</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Clearview Counselling. All rights reserved.</p>
+        <div className="border-t border-white/20 pt-6 text-center">
+          <p className="text-white/60 text-sm m-0">&copy; {new Date().getFullYear()} Clearview Counselling. All rights reserved.</p>
         </div>
       </div>
     </footer>

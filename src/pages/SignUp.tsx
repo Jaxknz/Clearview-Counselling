@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { db, auth } from '../config/firebase'
-import './SignUp.css'
 
 export type PlanType = 'discovery' | 'mentorship' | 'zoom'
 
@@ -324,9 +323,9 @@ function SignUp() {
 
   if (loadingUserData) {
     return (
-      <div className="signup-container">
-        <div className="signup-content">
-          <div style={{ textAlign: 'center', padding: '3rem' }}>Loading...</div>
+      <div className="min-h-[calc(100vh-80px)] p-8 bg-gradient-to-br from-bg-light via-sky/10 to-nature-green/10">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center py-12">Loading...</div>
         </div>
       </div>
     )
@@ -335,26 +334,26 @@ function SignUp() {
   const isSignedIn = !!currentUser
 
   return (
-    <div className="signup-container">
-      <div className="signup-header">
-        <h1>Clearview Counselling</h1>
-        <p>Your journey to clarity and growth starts here</p>
+    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-gradient-to-br from-bg-light via-sky/10 to-nature-green/10">
+      <div className="text-center text-text-dark mb-12 md:mb-8 py-8 md:py-4">
+        <h1 className="text-5xl md:text-4xl font-bold mb-2 bg-nature-gradient bg-clip-text text-transparent">Clearview Counselling</h1>
+        <p className="text-xl md:text-lg text-text-light">Your journey to clarity and growth starts here</p>
         {isSignedIn && (
-          <p className="signed-in-notice">Welcome back, {userName}! Select a plan to continue.</p>
+          <p className="mt-4 text-lg text-accent font-semibold">Welcome back, {userName}! Select a plan to continue.</p>
         )}
       </div>
 
-      <div className="signup-content">
-        <form onSubmit={handleSubmit} className="signup-form">
-          {error && <div className="error-message">{error}</div>}
+      <div className="max-w-[1200px] mx-auto">
+        <form onSubmit={handleSubmit} className="bg-gradient-to-br from-white via-primary/10 to-sky/10 rounded-2xl p-10 md:p-6 shadow-custom-lg border border-primary/20">
+          {error && <div className="bg-[#fee] text-[#c33] p-4 rounded-lg mb-6 text-center">{error}</div>}
 
           {!isSignedIn && (
             <>
-              <div className="form-section">
-                <h2>Personal Information</h2>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="firstName">First Name *</label>
+              <div className="mb-10">
+                <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Personal Information</h2>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 mb-6 md:grid-cols-1">
+                  <div className="flex flex-col">
+                    <label htmlFor="firstName" className="font-semibold text-text-dark mb-2 text-sm">First Name *</label>
                     <input
                       type="text"
                       id="firstName"
@@ -362,10 +361,11 @@ function SignUp() {
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="lastName">Last Name *</label>
+                  <div className="flex flex-col">
+                    <label htmlFor="lastName" className="font-semibold text-text-dark mb-2 text-sm">Last Name *</label>
                     <input
                       type="text"
                       id="lastName"
@@ -373,12 +373,13 @@ function SignUp() {
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
                 </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="email">Email *</label>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 md:grid-cols-1">
+                  <div className="flex flex-col">
+                    <label htmlFor="email" className="font-semibold text-text-dark mb-2 text-sm">Email *</label>
                     <input
                       type="email"
                       id="email"
@@ -386,10 +387,11 @@ function SignUp() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="phone">Phone *</label>
+                  <div className="flex flex-col">
+                    <label htmlFor="phone" className="font-semibold text-text-dark mb-2 text-sm">Phone *</label>
                     <input
                       type="tel"
                       id="phone"
@@ -397,16 +399,17 @@ function SignUp() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       required
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="form-section">
-                <h2>Account Security</h2>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="password">Password *</label>
+              <div className="mb-10">
+                <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Account Security</h2>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 md:grid-cols-1">
+                  <div className="flex flex-col">
+                    <label htmlFor="password" className="font-semibold text-text-dark mb-2 text-sm">Password *</label>
                     <input
                       type="password"
                       id="password"
@@ -416,10 +419,11 @@ function SignUp() {
                       required
                       minLength={6}
                       placeholder="Minimum 6 characters"
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirm Password *</label>
+                  <div className="flex flex-col">
+                    <label htmlFor="confirmPassword" className="font-semibold text-text-dark mb-2 text-sm">Confirm Password *</label>
                     <input
                       type="password"
                       id="confirmPassword"
@@ -428,6 +432,7 @@ function SignUp() {
                       onChange={handleInputChange}
                       required
                       placeholder="Re-enter your password"
+                      className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -436,19 +441,19 @@ function SignUp() {
           )}
 
           {isSignedIn && (
-            <div className="form-section">
-              <h2>Contact Information</h2>
+            <div className="mb-10">
+              <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Contact Information</h2>
               {formData.phone ? (
-                <div className="user-info-display">
-                  <p><strong>Name:</strong> {userName}</p>
-                  <p><strong>Email:</strong> {formData.email || currentUser.email}</p>
-                  <p><strong>Phone:</strong> {formData.phone}</p>
-                  <p className="info-note">Your contact information is on file. You can update your phone number below if needed.</p>
+                <div className="bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 p-6 rounded-lg mt-4 border border-primary/20">
+                  <p className="my-2 text-text-dark"><strong>Name:</strong> {userName}</p>
+                  <p className="my-2 text-text-dark"><strong>Email:</strong> {formData.email || currentUser.email}</p>
+                  <p className="my-2 text-text-dark"><strong>Phone:</strong> {formData.phone}</p>
+                  <p className="mt-4 p-4 bg-[#e7f3ff] border-l-4 border-primary rounded text-text-dark text-sm">Your contact information is on file. You can update your phone number below if needed.</p>
                 </div>
               ) : null}
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="phone">Phone Number {!formData.phone && '*'}</label>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 md:grid-cols-1">
+                <div className="flex flex-col">
+                  <label htmlFor="phone" className="font-semibold text-text-dark mb-2 text-sm">Phone Number {!formData.phone && '*'}</label>
                   <input
                     type="tel"
                     id="phone"
@@ -457,41 +462,50 @@ function SignUp() {
                     onChange={handleInputChange}
                     required={!formData.phone}
                     placeholder={formData.phone ? "Update your phone number (optional)" : "Your phone number"}
+                    className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                   />
                   {formData.phone && (
-                    <small className="optional-note">Optional - you already have a phone number on file</small>
+                    <small className="block mt-2 text-text-light text-sm italic">Optional - you already have a phone number on file</small>
                   )}
                 </div>
               </div>
               {!formData.phone && (
-                <div className="user-info-display">
-                  <p><strong>Name:</strong> {userName}</p>
-                  <p><strong>Email:</strong> {formData.email || currentUser.email}</p>
+                <div className="bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 p-6 rounded-lg mt-4 border border-primary/20">
+                  <p className="my-2 text-text-dark"><strong>Name:</strong> {userName}</p>
+                  <p className="my-2 text-text-dark"><strong>Email:</strong> {formData.email || currentUser.email}</p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="form-section">
-            <h2>Select Your Plan</h2>
-            <div className="plans-grid">
+          <div className="mb-10">
+            <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Select Your Plan</h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6 mt-6 md:grid-cols-1">
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`plan-card ${selectedPlan === plan.id ? 'selected' : ''}`}
+                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 bg-gradient-to-br from-white via-sky/10 to-nature-green/5 relative ${
+                    selectedPlan === plan.id 
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-secondary/5 shadow-[0_0_0_3px_rgba(74,144,226,0.1)]' 
+                      : 'border-border hover:-translate-y-1 hover:shadow-custom-lg hover:border-primary'
+                  }`}
                   onClick={() => setSelectedPlan(plan.id)}
                 >
-                  <div className="plan-header">
-                    <h3>{plan.name}</h3>
-                    <div className="plan-price">{plan.price}</div>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-text-dark text-2xl md:text-xl font-bold flex-1">{plan.name}</h3>
+                    <div className="text-xl font-bold text-primary ml-4">{plan.price}</div>
                   </div>
-                  <p className="plan-description">{plan.description}</p>
-                  <ul className="plan-features">
+                  <p className="text-text-light mb-4 text-sm">{plan.description}</p>
+                  <ul className="list-none mb-6">
                     {plan.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
+                      <li key={index} className="py-2 pl-6 relative text-text-dark before:content-['•'] before:absolute before:left-0 before:text-accent before:font-bold">{feature}</li>
                     ))}
                   </ul>
-                  <div className="plan-select-indicator">
+                  <div className={`text-center py-3 rounded-lg font-semibold text-text-dark transition-all duration-300 ${
+                    selectedPlan === plan.id 
+                      ? 'bg-primary text-white' 
+                      : 'bg-gradient-to-br from-primary/10 via-sky/10 to-nature-green/10'
+                  }`}>
                     {selectedPlan === plan.id ? 'Selected' : 'Select Plan'}
                   </div>
                 </div>
@@ -500,22 +514,23 @@ function SignUp() {
           </div>
 
           {!currentUser && (
-            <div className="form-section terms-section">
-              <h2>Legal Agreements</h2>
-              <div className="terms-checkboxes">
-                <div className="checkbox-group">
-                  <label className="checkbox-label">
+            <div className="mb-10 mt-6 pt-6 border-t-2 border-border">
+              <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Legal Agreements</h2>
+              <div className="flex flex-col gap-4 mb-4">
+                <div className="flex items-start">
+                  <label className="flex items-start gap-3 cursor-pointer text-text-dark text-sm leading-relaxed">
                     <input
                       type="checkbox"
                       checked={agreedToPrivacy}
                       onChange={(e) => setAgreedToPrivacy(e.target.checked)}
                       required
+                      className="mt-1 w-5 h-5 cursor-pointer accent-primary flex-shrink-0"
                     />
-                    <span>
+                    <span className="flex-1">
                       I agree to the{' '}
                       <Link 
                         to="/privacy-policy" 
-                        className="terms-link" 
+                        className="text-primary no-underline font-semibold transition-colors duration-300 hover:text-secondary hover:underline" 
                         onClick={(e) => {
                           e.stopPropagation()
                           window.open('/privacy-policy', '_blank', 'noopener,noreferrer')
@@ -528,19 +543,20 @@ function SignUp() {
                     </span>
                   </label>
                 </div>
-                <div className="checkbox-group">
-                  <label className="checkbox-label">
+                <div className="flex items-start">
+                  <label className="flex items-start gap-3 cursor-pointer text-text-dark text-sm leading-relaxed">
                     <input
                       type="checkbox"
                       checked={agreedToTerms}
                       onChange={(e) => setAgreedToTerms(e.target.checked)}
                       required
+                      className="mt-1 w-5 h-5 cursor-pointer accent-primary flex-shrink-0"
                     />
-                    <span>
+                    <span className="flex-1">
                       I agree to the{' '}
                       <Link 
                         to="/terms-and-conditions" 
-                        className="terms-link" 
+                        className="text-primary no-underline font-semibold transition-colors duration-300 hover:text-secondary hover:underline" 
                         onClick={(e) => {
                           e.stopPropagation()
                           window.open('/terms-and-conditions', '_blank', 'noopener,noreferrer')
@@ -554,13 +570,13 @@ function SignUp() {
                   </label>
                 </div>
               </div>
-              <p className="terms-note">
+              <p className="mt-4 p-4 bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 border-l-4 border-primary rounded text-text-dark text-sm leading-relaxed">
                 By creating an account, you acknowledge that you have read, understood, and agree to be bound by our Privacy Policy and Terms and Conditions.
               </p>
             </div>
           )}
 
-          <button type="submit" className="submit-button" disabled={loading || (!currentUser && (!agreedToPrivacy || !agreedToTerms))}>
+          <button type="submit" className="w-full py-4 px-8 bg-nature-gradient text-white text-lg font-semibold rounded-lg mt-8 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none" disabled={loading || (!currentUser && (!agreedToPrivacy || !agreedToTerms))}>
             {loading 
               ? (isSignedIn ? 'Saving...' : 'Creating Account...') 
               : (isSignedIn 
@@ -569,8 +585,8 @@ function SignUp() {
           </button>
           
           {!isSignedIn && (
-            <p className="signup-footer">
-              Already have an account? <Link to="/signin">Sign in here</Link>
+            <p className="text-center mt-6 text-text-light text-sm">
+              Already have an account? <Link to="/signin" className="text-primary no-underline font-semibold hover:underline">Sign in here</Link>
             </p>
           )}
         </form>

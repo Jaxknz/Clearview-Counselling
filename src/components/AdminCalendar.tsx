@@ -3,7 +3,6 @@ import { useToast } from '../contexts/ToastContext'
 import { collection, query, getDocs, addDoc, deleteDoc, doc, where, orderBy, Timestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import ConfirmDialog from './ConfirmDialog'
-import './AdminCalendar.css'
 
 interface Appointment {
   id: string
@@ -33,7 +32,7 @@ interface AdminCalendarProps {
   clients: ClientData[]
 }
 
-type CalendarView = 'calendar' | 'pending'
+type CalendarView = 'calendar' | 'pending' | 'all'
 
 function AdminCalendar({ clients }: AdminCalendarProps) {
   const { showSuccess, showError } = useToast()
@@ -45,7 +44,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
   const [appointmentType, setAppointmentType] = useState<'discovery' | 'mentorship' | 'zoom'>('discovery')
   const [appointmentNotes, setAppointmentNotes] = useState('')
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
   const [showBookingForm, setShowBookingForm] = useState(false)
+  const [showDayBreakdown, setShowDayBreakdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingAppointments, setLoadingAppointments] = useState(true)
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([])
@@ -66,6 +67,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
   })
   const [rescheduleTime, setRescheduleTime] = useState('')
   const [rescheduleLoading, setRescheduleLoading] = useState(false)
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null)
+  const [editingNotes, setEditingNotes] = useState('')
+  const [savingNotes, setSavingNotes] = useState(false)
 
   const timeSlots = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -78,6 +82,18 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth, view])
 
+  // Disable body scroll when modals are open
+  useEffect(() => {
+    if (showDayBreakdown || showBookingForm || reschedulingAppointmentId) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showDayBreakdown, showBookingForm, reschedulingAppointmentId])
+
   const loadAppointments = async () => {
     try {
       setLoadingAppointments(true)
@@ -86,7 +102,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
       // Load all appointments (we need all for pending view, and can filter calendar client-side)
       let querySnapshot
       
-      // Try to load current month for calendar view (for performance), but need all for pending
+      // Try to load current month for calendar view (for performance), but need all for pending/all views
       if (view === 'calendar') {
         const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
         startOfMonth.setHours(0, 0, 0, 0)
@@ -109,7 +125,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
           }
         }
       } else {
-        // For pending view, always load all appointments
+        // For pending/all views, always load all appointments
         querySnapshot = await getDocs(appointmentsRef)
       }
       
@@ -129,6 +145,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
         allAppointmentsData.push(appointment)
       })
       
+      // Store all appointments
+      setAllAppointments(allAppointmentsData)
+      
       // For calendar view, filter by month
       if (view === 'calendar') {
         const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
@@ -139,7 +158,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
         })
         setAppointments(monthAppointments)
       } else {
-        // For pending view, show all (will be filtered to pending below)
+        // For pending/all views, show all (will be filtered to pending below)
         setAppointments(allAppointmentsData)
       }
       
@@ -310,6 +329,10 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
       setReschedulingAppointmentId(null)
       setRescheduleDate('')
       setRescheduleTime('')
+      // Keep day breakdown open and refresh
+      if (selectedDate) {
+        setShowDayBreakdown(true)
+      }
       loadAppointments()
     } catch (error) {
       console.error('Error rescheduling appointment:', error)
@@ -344,7 +367,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
 
   const getAppointmentsForDate = (date: Date | null): Appointment[] => {
     if (!date) return []
-    return appointments.filter(apt => {
+    // Use allAppointments to get all appointments for the date, not just month-filtered ones
+    const appointmentsToSearch = view === 'calendar' ? allAppointments : appointments
+    return appointmentsToSearch.filter(apt => {
       const aptDate = apt.date
       return aptDate.getDate() === date.getDate() &&
              aptDate.getMonth() === date.getMonth() &&
@@ -355,11 +380,14 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
   const handleDateClick = (date: Date | null) => {
     if (date) {
       setSelectedDate(date)
-      setShowBookingForm(true)
-      setSelectedTime('')
-      setSelectedClient('')
-      setAppointmentNotes('')
+      setShowDayBreakdown(true)
+      setShowBookingForm(false)
     }
+  }
+
+  const handleCreateAppointmentFromDay = () => {
+    setShowBookingForm(true)
+    setShowDayBreakdown(false)
   }
 
   const handleBookAppointment = async (e: React.FormEvent) => {
@@ -420,12 +448,21 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
 
       showSuccess('Appointment booked successfully!')
       setShowBookingForm(false)
-      setSelectedDate(null)
+      // If we came from day breakdown, keep the date selected and show breakdown again
+      if (selectedDate) {
+        setShowDayBreakdown(true)
+      } else {
+        setShowDayBreakdown(false)
+        setSelectedDate(null)
+      }
       setSelectedTime('')
       setSelectedClient('')
       setAppointmentNotes('')
       setAppointmentType('discovery')
-      loadAppointments()
+      // Small delay to ensure appointment is saved before reloading
+      setTimeout(() => {
+        loadAppointments()
+      }, 500)
     } catch (error) {
       console.error('Error booking appointment:', error)
       showError('Failed to book appointment. Please try again.')
@@ -452,6 +489,40 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
         }
       }
     })
+  }
+
+  const handleEditNotes = async (appointmentId: string, currentNotes: string) => {
+    setEditingAppointmentId(appointmentId)
+    setEditingNotes(currentNotes || '')
+  }
+
+  const handleSaveNotes = async (appointmentId: string) => {
+    try {
+      setSavingNotes(true)
+      await updateDoc(doc(db, 'appointments', appointmentId), {
+        notes: editingNotes,
+        updatedAt: Timestamp.now()
+      })
+      showSuccess('Notes updated successfully')
+      setEditingAppointmentId(null)
+      setEditingNotes('')
+      // Small delay to ensure appointment is saved before reloading
+      setTimeout(() => {
+        loadAppointments()
+      }, 300)
+    } catch (error) {
+      console.error('Error updating notes:', error)
+      showError('Failed to update notes. Please try again.')
+    } finally {
+      setSavingNotes(false)
+    }
+  }
+
+  const handleRescheduleFromDayBreakdown = (apt: Appointment) => {
+    setReschedulingAppointmentId(apt.id)
+    const dateStr = apt.date.toISOString().split('T')[0]
+    setRescheduleDate(dateStr)
+    setRescheduleTime(apt.time)
   }
 
   const nextMonth = () => {
@@ -497,35 +568,69 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div className="admin-calendar">
-      <div className="calendar-header">
-        <div className="calendar-view-tabs">
+    <div className="bg-white p-8 md:p-4 rounded-xl shadow-custom">
+        <div className="flex flex-col gap-6 mb-8">
+        <div className="flex gap-4 border-b-2 border-border pb-0 md:flex-wrap">
           <button
-            className={`calendar-view-tab ${view === 'calendar' ? 'active' : ''}`}
-            onClick={() => setView('calendar')}
+            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+              view === 'calendar' 
+                ? 'text-primary border-b-primary' 
+                : 'border-b-transparent hover:text-primary hover:bg-primary/5'
+            }`}
+            onClick={() => {
+              setView('calendar')
+              setShowDayBreakdown(false)
+              setShowBookingForm(false)
+              setSelectedDate(null)
+            }}
           >
             Calendar View
           </button>
           <button
-            className={`calendar-view-tab ${view === 'pending' ? 'active' : ''}`}
-            onClick={() => setView('pending')}
+            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+              view === 'pending' 
+                ? 'text-primary border-b-primary' 
+                : 'border-b-transparent hover:text-primary hover:bg-primary/5'
+            }`}
+            onClick={() => {
+              setView('pending')
+              setShowDayBreakdown(false)
+              setShowBookingForm(false)
+              setSelectedDate(null)
+            }}
           >
             Pending Appointments ({pendingAppointments.length})
           </button>
+          <button
+            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+              view === 'all' 
+                ? 'text-primary border-b-primary' 
+                : 'border-b-transparent hover:text-primary hover:bg-primary/5'
+            }`}
+            onClick={() => {
+              setView('all')
+              setShowDayBreakdown(false)
+              setShowBookingForm(false)
+              setSelectedDate(null)
+            }}
+          >
+            All Appointments ({allAppointments.length})
+          </button>
         </div>
         {view === 'calendar' && (
-          <div className="calendar-header-top">
-            <div className="calendar-nav">
-              <button onClick={prevMonth} className="nav-button">Previous</button>
-              <h2>{monthName}</h2>
-              <button onClick={nextMonth} className="nav-button">Next</button>
+          <div className="flex justify-between items-center md:flex-col md:gap-4 md:items-stretch">
+            <div className="flex items-center gap-4 md:justify-between">
+              <button onClick={prevMonth} className="py-2 px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary">Previous</button>
+              <h2 className="m-0 text-2xl md:text-xl text-text-dark min-w-[200px] text-center">{monthName}</h2>
+              <button onClick={nextMonth} className="py-2 px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary">Next</button>
             </div>
             <button 
               onClick={() => {
                 setSelectedDate(new Date())
-                setShowBookingForm(true)
+                setShowDayBreakdown(true)
+                setShowBookingForm(false)
               }}
-              className="new-appointment-button"
+              className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg"
             >
               + New Appointment
             </button>
@@ -534,54 +639,238 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
       </div>
 
       {loadingAppointments && (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div className="text-center py-8">
           <p>Loading {view === 'calendar' ? 'calendar' : 'appointments'}...</p>
         </div>
       )}
 
+      {view === 'all' && !loadingAppointments && (
+        <div className="mt-4">
+          <h3 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">All Appointments ({allAppointments.length})</h3>
+          {allAppointments.length === 0 ? (
+            <div className="text-center py-16 px-8 text-text-light bg-white rounded-xl border-2 border-dashed border-border">
+              <p>No appointments found</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {allAppointments
+                .sort((a, b) => {
+                  const dateA = new Date(`${a.date.toISOString().split('T')[0]}T${a.time}`)
+                  const dateB = new Date(`${b.date.toISOString().split('T')[0]}T${b.time}`)
+                  return dateB.getTime() - dateA.getTime() // Most recent first
+                })
+                .map(apt => {
+                  const status = apt.status || 'pending'
+                  return (
+                    <div key={apt.id} className={`bg-white border-2 rounded-xl p-6 transition-all duration-300 flex flex-col gap-4 hover:shadow-lg ${
+                      status === 'pending' 
+                        ? 'border-l-4 border-l-[#f5d89c]' 
+                        : status === 'confirmed'
+                        ? 'border-l-4 border-l-primary'
+                        : 'border-l-4 border-l-gray-400 opacity-70'
+                    }`}>
+                      <div className="flex justify-between items-start pb-4 border-b-2 border-border">
+                        <div className="flex flex-col gap-1">
+                          <strong className="text-text-dark text-lg">{apt.clientName}</strong>
+                          <span className="text-text-light text-sm">{apt.clientEmail}</span>
+                        </div>
+                        <span className={`py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap ${
+                          status === 'pending' 
+                            ? 'bg-[#f5d89c] text-[#8b6914]' 
+                            : status === 'confirmed'
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-gray-300 text-gray-600'
+                        }`}>
+                          {status === 'pending' ? 'Pending' : status === 'confirmed' ? 'Confirmed' : 'Cancelled'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <div className="text-text-dark text-sm">
+                          <strong className="text-text-dark mr-2">Date:</strong> {formatDate(apt.date)}
+                        </div>
+                        <div className="text-text-dark text-sm">
+                          <strong className="text-text-dark mr-2">Time:</strong> {formatTime(apt.time)}
+                        </div>
+                        <div className="text-text-dark text-sm">
+                          <strong className="text-text-dark mr-2">Type:</strong> {getTypeName(apt.type)} ({apt.duration} min)
+                        </div>
+                        {editingAppointmentId === apt.id ? (
+                          <div className="mt-3 p-3 bg-white rounded-lg border border-primary/20">
+                            <label className="block font-semibold text-text-dark mb-2 text-xs">Notes</label>
+                            <textarea
+                              value={editingNotes}
+                              onChange={(e) => setEditingNotes(e.target.value)}
+                              rows={3}
+                              placeholder="Add notes about this appointment..."
+                              className="w-full py-2 px-3 border-2 border-border rounded-lg text-sm transition-all duration-300 font-inherit resize-y focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none bg-white"
+                            />
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => handleSaveNotes(apt.id)}
+                                disabled={savingNotes}
+                                className="py-1.5 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {savingNotes ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingAppointmentId(null)
+                                  setEditingNotes('')
+                                }}
+                                className="py-1.5 px-4 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border text-xs"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            {apt.notes ? (
+                              <div className="text-xs text-text-light italic bg-white p-2 rounded border border-border/50 relative group">
+                                <strong className="text-text-dark not-italic mr-1">Notes:</strong>
+                                {apt.notes}
+                                <button
+                                  onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                                  className="ml-2 text-xs text-primary hover:text-primary-dark font-medium cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-text-light">
+                                <button
+                                  onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                                  className="text-primary hover:text-primary-dark font-medium cursor-pointer"
+                                >
+                                  + Add notes
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div className="pt-2 border-t border-border text-text-light text-xs">
+                          <small>Created: {apt.createdAt.toLocaleDateString()} at {apt.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 pt-4 border-t-2 border-border flex-wrap">
+                        <button
+                          className="py-1.5 px-3 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                          onClick={() => handleRescheduleFromDayBreakdown(apt)}
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                          className="py-1.5 px-3 bg-primary text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                        >
+                          {apt.notes ? 'Edit Notes' : 'Add Notes'}
+                        </button>
+                        <button
+                          className="py-1.5 px-3 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                          onClick={() => {
+                            const subject = `Clearview Counselling - Appointment Update`
+                            const body = `Dear ${apt.clientName},\n\n` +
+                              `This email is regarding your appointment:\n\n` +
+                              `Date: ${formatDate(apt.date)}\n` +
+                              `Time: ${formatTime(apt.time)}\n` +
+                              `Type: ${getTypeName(apt.type)}\n` +
+                              `Status: ${status === 'confirmed' ? 'Confirmed' : status === 'cancelled' ? 'Cancelled' : 'Pending Confirmation'}\n\n` +
+                              (apt.notes ? `Notes: ${apt.notes}\n\n` : '') +
+                              `Please let us know if you have any questions.\n\n` +
+                              `Best regards,\nClearview Counselling`
+                            const mailtoLink = `mailto:${apt.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+                            window.location.href = mailtoLink
+                          }}
+                        >
+                          Email
+                        </button>
+                        {status === 'pending' && (
+                          <button
+                            className="py-1.5 px-3 bg-gradient-to-r from-accent to-[#66bb6a] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                            onClick={() => {
+                              setConfirmDialog({
+                                isOpen: true,
+                                title: 'Confirm Appointment',
+                                message: `Confirm appointment with ${apt.clientName} on ${formatDate(apt.date)} at ${formatTime(apt.time)}?`,
+                                type: 'info',
+                                onConfirm: async () => {
+                                  setConfirmDialog({ ...confirmDialog, isOpen: false })
+                                  try {
+                                    await updateDoc(doc(db, 'appointments', apt.id), {
+                                      status: 'confirmed',
+                                      updatedAt: Timestamp.now()
+                                    })
+                                    showSuccess('Appointment confirmed!')
+                                    loadAppointments()
+                                  } catch (error) {
+                                    console.error('Error confirming appointment:', error)
+                                    showError('Failed to confirm appointment. Please try again.')
+                                  }
+                                }
+                              })
+                            }}
+                          >
+                            Confirm
+                          </button>
+                        )}
+                        <button
+                          className="py-1.5 px-3 bg-[#e57373] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                          onClick={() => handleDeleteAppointment(apt.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </div>
+      )}
+
       {view === 'pending' && !loadingAppointments && (
-        <div className="pending-appointments-list">
-          <h3>Pending Appointments ({pendingAppointments.length})</h3>
+        <div className="mt-4">
+          <h3 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">Pending Appointments ({pendingAppointments.length})</h3>
           {pendingAppointments.length === 0 ? (
-            <div className="no-pending-appointments">
+            <div className="text-center py-16 px-8 text-text-light bg-bg-light rounded-xl border-2 border-dashed border-border">
               <p>No pending appointments at this time</p>
             </div>
           ) : (
-            <div className="pending-appointments-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-6 md:grid-cols-1">
               {pendingAppointments.map(apt => (
-                  <div key={apt.id} className="pending-appointment-card">
-                    <div className="pending-appointment-header">
-                      <div className="pending-appointment-client">
-                        <strong>{apt.clientName}</strong>
-                        <span className="pending-appointment-email">{apt.clientEmail}</span>
+                  <div key={apt.id} className="bg-white border-2 border-border border-l-4 border-l-[#f5d89c] rounded-xl p-6 transition-all duration-300 flex flex-col gap-4 hover:shadow-custom-lg hover:border-primary hover:-translate-y-0.5">
+                    <div className="flex justify-between items-start pb-4 border-b-2 border-border">
+                      <div className="flex flex-col gap-1">
+                        <strong className="text-text-dark text-lg">{apt.clientName}</strong>
+                        <span className="text-text-light text-sm">{apt.clientEmail}</span>
                       </div>
-                      <span className="pending-badge">Pending</span>
+                      <span className="bg-[#f5d89c] text-[#8b6914] py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap">Pending</span>
                     </div>
-                    <div className="pending-appointment-details">
-                      <div className="pending-appointment-date">
-                        <strong>Date:</strong> {formatDate(apt.date)}
+                    <div className="flex flex-col gap-3">
+                      <div className="text-text-dark text-sm">
+                        <strong className="text-text-dark mr-2">Date:</strong> {formatDate(apt.date)}
                       </div>
-                      <div className="pending-appointment-time">
-                        <strong>Time:</strong> {formatTime(apt.time)}
+                      <div className="text-text-dark text-sm">
+                        <strong className="text-text-dark mr-2">Time:</strong> {formatTime(apt.time)}
                       </div>
-                      <div className="pending-appointment-type">
-                        <strong>Type:</strong> {getTypeName(apt.type)} ({apt.duration} min)
+                      <div className="text-text-dark text-sm">
+                        <strong className="text-text-dark mr-2">Type:</strong> {getTypeName(apt.type)} ({apt.duration} min)
                       </div>
                       {apt.notes && (
-                        <div className="pending-appointment-notes">
-                          <strong>Notes:</strong> {apt.notes}
+                        <div className="p-3 bg-bg-light rounded-md italic text-text-dark text-sm">
+                          <strong className="text-text-dark not-italic mr-2">Notes:</strong> {apt.notes}
                         </div>
                       )}
-                      <div className="pending-appointment-created">
+                      <div className="pt-2 border-t border-border text-text-light text-xs">
                         <small>Requested: {apt.createdAt.toLocaleDateString()} at {apt.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
                       </div>
                     </div>
                     {reschedulingAppointmentId === apt.id ? (
-                      <div className="reschedule-form-pending">
-                        <h4>Request Reschedule</h4>
-                        <form onSubmit={(e) => handleRequestReschedule(e, apt.id)} className="reschedule-form-pending-content">
-                          <div className="form-group">
-                            <label htmlFor={`rescheduleDate-${apt.id}`}>New Date *</label>
+                      <div className="pt-4 border-t-2 border-border mt-4">
+                        <h4 className="text-text-dark mb-4 text-lg">Request Reschedule</h4>
+                        <form onSubmit={(e) => handleRequestReschedule(e, apt.id)} className="flex flex-col gap-4 bg-bg-light p-4 rounded-lg">
+                          <div className="flex flex-col gap-2">
+                            <label htmlFor={`rescheduleDate-${apt.id}`} className="font-semibold text-text-dark text-sm">New Date *</label>
                             <input
                               type="date"
                               id={`rescheduleDate-${apt.id}`}
@@ -589,15 +878,17 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                               onChange={(e) => setRescheduleDate(e.target.value)}
                               min={getMinDate()}
                               required
+                              className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                             />
                           </div>
-                          <div className="form-group">
-                            <label htmlFor={`rescheduleTime-${apt.id}`}>New Time *</label>
+                          <div className="flex flex-col gap-2">
+                            <label htmlFor={`rescheduleTime-${apt.id}`} className="font-semibold text-text-dark text-sm">New Time *</label>
                             <select
                               id={`rescheduleTime-${apt.id}`}
                               value={rescheduleTime}
                               onChange={(e) => setRescheduleTime(e.target.value)}
                               required
+                              className="py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                             >
                               <option value="">Select a time</option>
                               {timeSlots.map(slot => (
@@ -605,10 +896,10 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                               ))}
                             </select>
                           </div>
-                          <div className="reschedule-form-actions">
+                          <div className="flex gap-4 mt-2 md:flex-col">
                             <button
                               type="button"
-                              className="cancel-reschedule-button"
+                              className="flex-1 py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
                               onClick={() => {
                                 setReschedulingAppointmentId(null)
                                 setRescheduleDate('')
@@ -619,7 +910,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                             </button>
                             <button
                               type="submit"
-                              className="submit-reschedule-button"
+                              className="flex-1 py-3 px-6 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                               disabled={rescheduleLoading}
                             >
                               {rescheduleLoading ? 'Rescheduling...' : 'Request Reschedule'}
@@ -628,9 +919,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                         </form>
                       </div>
                     ) : (
-                      <div className="pending-appointment-actions">
+                      <div className="flex gap-1.5 pt-4 border-t-2 border-border flex-wrap">
                         <button
-                          className="email-pending-button"
+                          className="py-1.5 px-3 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
                           onClick={() => {
                             const subject = `Clearview Counselling - Appointment Request Confirmation`
                             const body = `Dear ${apt.clientName},\n\n` +
@@ -648,10 +939,10 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                           }}
                           title="Send email to client"
                         >
-                          Email Client
+                          Email
                         </button>
                         <button
-                          className="reschedule-pending-button"
+                          className="py-1.5 px-3 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
                           onClick={() => {
                             setReschedulingAppointmentId(apt.id)
                             const dateStr = apt.date.toISOString().split('T')[0]
@@ -660,10 +951,10 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                           }}
                           title="Request reschedule for this appointment"
                         >
-                          Request Reschedule
+                          Reschedule
                         </button>
                         <button
-                          className="confirm-pending-button"
+                          className="py-1.5 px-3 bg-gradient-to-r from-accent to-[#66bb6a] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
                           onClick={() => {
                             setConfirmDialog({
                               isOpen: true,
@@ -690,7 +981,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                           Confirm
                         </button>
                         <button
-                          className="cancel-pending-button"
+                          className="py-1.5 px-3 bg-[#e57373] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
                           onClick={() => {
                             setConfirmDialog({
                               isOpen: true,
@@ -727,39 +1018,54 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
 
       {view === 'calendar' && !loadingAppointments && (
         <>
-        <div className="calendar-grid">
-        <div className="calendar-days-header">
+        <div className="mb-8">
+        <div className="grid grid-cols-7 gap-2 mb-2">
           {dayNames.map(day => (
-            <div key={day} className="calendar-day-header">{day}</div>
+            <div key={day} className="text-center font-semibold text-text-dark py-2 text-sm">{day}</div>
           ))}
         </div>
-        <div className="calendar-days">
+        <div className="grid grid-cols-7 gap-2">
           {days.map((date, index) => {
             const dayAppointments = getAppointmentsForDate(date)
             const isToday = date && 
               date.toDateString() === new Date().toDateString()
+            const isSelected = selectedDate && date && selectedDate.toDateString() === date.toDateString()
             
             return (
               <div
                 key={index}
-                className={`calendar-day ${!date ? 'empty' : ''} ${isToday ? 'today' : ''} ${selectedDate && date && selectedDate.toDateString() === date.toDateString() ? 'selected' : ''}`}
+                className={`min-h-[100px] border-2 rounded-lg p-2 cursor-pointer transition-all duration-300 bg-white ${
+                  !date 
+                    ? 'border-transparent cursor-default' 
+                    : isToday 
+                    ? 'border-primary bg-primary/10' 
+                    : isSelected
+                    ? 'border-primary bg-primary/15 shadow-[0_0_0_3px_rgba(74,144,226,0.2)]'
+                    : 'border-border hover:bg-bg-light hover:border-primary'
+                }`}
                 onClick={() => handleDateClick(date)}
               >
                 {date && (
                   <>
-                    <div className="day-number">{date.getDate()}</div>
-                    <div className="day-appointments">
+                    <div className="font-semibold text-text-dark mb-2 text-sm">{date.getDate()}</div>
+                    <div className="flex flex-col gap-1">
                       {dayAppointments.slice(0, 2).map(apt => (
                         <div 
                           key={apt.id} 
-                          className={`appointment-badge appointment-${apt.type}`}
+                          className={`text-xs py-1 px-2 rounded text-white whitespace-nowrap overflow-hidden text-ellipsis ${
+                            apt.type === 'discovery' 
+                              ? 'bg-accent' 
+                              : apt.type === 'mentorship' 
+                              ? 'bg-primary' 
+                              : 'bg-secondary'
+                          }`}
                           title={`${apt.clientName} - ${apt.time} (${apt.type})`}
                         >
                           {apt.time} - {apt.clientName.split(' ')[0]}
                         </div>
                       ))}
                       {dayAppointments.length > 2 && (
-                        <div className="more-appointments">
+                        <div className="text-xs text-text-light italic">
                           +{dayAppointments.length - 2} more
                         </div>
                       )}
@@ -772,82 +1078,331 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
         </div>
       </div>
 
-      {/* Appointments List - Show for selected date */}
-      {selectedDate && !showBookingForm && (
-        <div className="appointments-list">
-          <h3>Appointments for {formatDate(selectedDate)}</h3>
-          {getAppointmentsForDate(selectedDate).length === 0 ? (
-            <p className="no-appointments">No appointments scheduled for this date</p>
-          ) : (
-            <div className="appointments-items">
-              {getAppointmentsForDate(selectedDate)
-                .sort((a, b) => a.time.localeCompare(b.time))
-                .map(apt => {
-                  const status = apt.status || 'pending'
-                  return (
-                    <div key={apt.id} className={`appointment-item ${status === 'pending' ? 'pending-item' : ''}`}>
-                      <div className="appointment-time">{apt.time}</div>
-                      <div className="appointment-details">
-                        <div className="appointment-client">
-                          {apt.clientName}
-                          {status === 'pending' && <span className="pending-indicator">Pending</span>}
-                        </div>
-                        <div className="appointment-meta">
-                          {apt.type === 'discovery' ? 'Discovery Call' : 
-                           apt.type === 'mentorship' ? 'Mentorship' : 
-                           'Zoom Session'} - {apt.duration} min - {apt.clientPhone}
-                        </div>
-                        {apt.notes && (
-                          <div className="appointment-notes">{apt.notes}</div>
-                        )}
-                      </div>
-                      <button 
-                        className="delete-appointment-button"
-                        onClick={() => handleDeleteAppointment(apt.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-        </div>
-      )}
       </>
       )}
 
+      {/* Day Breakdown Modal/Popup */}
+      {showDayBreakdown && selectedDate && !showBookingForm && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000]" onClick={() => {
+          setShowDayBreakdown(false)
+          setSelectedDate(null)
+        }}>
+          <div className="bg-white rounded-2xl p-8 md:p-6 w-[90%] max-w-[800px] max-h-[90vh] overflow-y-auto shadow-custom-lg border border-primary/20" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-text-dark text-2xl md:text-xl font-semibold">Appointments for {formatDate(selectedDate)}</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCreateAppointmentFromDay}
+                  className="py-2 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-sm"
+                >
+                  + New Appointment
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDayBreakdown(false)
+                    setSelectedDate(null)
+                  }}
+                  className="bg-transparent border-none text-2xl text-text-light cursor-pointer leading-none p-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 hover:bg-primary/20 hover:text-text-dark"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            {getAppointmentsForDate(selectedDate).length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-border">
+                <p className="text-text-light mb-4 text-lg">No appointments scheduled for this date</p>
+                <button
+                  onClick={handleCreateAppointmentFromDay}
+                  className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom"
+                >
+                  Create First Appointment
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {getAppointmentsForDate(selectedDate)
+                  .sort((a, b) => a.time.localeCompare(b.time))
+                  .map(apt => {
+                    const status = apt.status || 'pending'
+                    return (
+                      <div key={apt.id} className={`flex gap-4 p-4 bg-white rounded-lg border-l-4 shadow-sm ${
+                        status === 'pending' 
+                          ? 'border-l-[#f5d89c] bg-[rgba(245,216,156,0.15)]' 
+                          : status === 'confirmed'
+                          ? 'border-l-primary bg-primary/5'
+                          : 'border-l-gray-400 bg-gray-50'
+                      } md:flex-col`}>
+                        <div className="font-bold text-primary min-w-[100px] text-lg">{formatTime(apt.time)}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-text-dark mb-1 text-lg">
+                            {apt.clientName}
+                            <span className={`inline-block ml-3 py-1 px-2 rounded-lg text-xs font-bold ${
+                              status === 'pending' 
+                                ? 'bg-[#f5d89c] text-[#8b6914]' 
+                                : status === 'confirmed'
+                                ? 'bg-primary/20 text-primary'
+                                : 'bg-gray-300 text-gray-600'
+                            }`}>
+                              {status === 'pending' ? 'Pending' : status === 'confirmed' ? 'Confirmed' : 'Cancelled'}
+                            </span>
+                          </div>
+                          <div className="text-sm text-text-light mb-2">
+                            {getTypeName(apt.type)} - {apt.duration} min
+                          </div>
+                          <div className="text-sm text-text-light mb-2">
+                            📧 {apt.clientEmail} | 📞 {apt.clientPhone}
+                          </div>
+                          {editingAppointmentId === apt.id ? (
+                            <div className="mt-3 p-3 bg-white rounded-lg border border-primary/20">
+                              <label className="block font-semibold text-text-dark mb-2 text-xs">Notes</label>
+                              <textarea
+                                value={editingNotes}
+                                onChange={(e) => setEditingNotes(e.target.value)}
+                                rows={3}
+                                placeholder="Add notes about this appointment..."
+                                className="w-full py-2 px-3 border-2 border-border rounded-lg text-sm transition-all duration-300 font-inherit resize-y focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none bg-white"
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => handleSaveNotes(apt.id)}
+                                  disabled={savingNotes}
+                                  className="py-1.5 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  {savingNotes ? 'Saving...' : 'Save'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingAppointmentId(null)
+                                    setEditingNotes('')
+                                  }}
+                                  className="py-1.5 px-4 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border text-xs"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-2">
+                              {apt.notes ? (
+                                <div className="text-xs text-text-light italic bg-white p-2 rounded border border-border/50 relative group">
+                                  <strong className="text-text-dark not-italic mr-1">Notes:</strong>
+                                  {apt.notes}
+                                  <button
+                                    onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                                    className="ml-2 text-xs text-primary hover:text-primary-dark font-medium cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-text-light">
+                                  <button
+                                    onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                                    className="text-primary hover:text-primary-dark font-medium cursor-pointer"
+                                  >
+                                    + Add notes
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-row gap-1.5 flex-wrap">
+                          <button 
+                            className="py-1.5 px-3 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                            onClick={() => handleRescheduleFromDayBreakdown(apt)}
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            onClick={() => handleEditNotes(apt.id, apt.notes || '')}
+                            className="py-1.5 px-3 bg-primary text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                          >
+                            {apt.notes ? 'Edit Notes' : 'Add Notes'}
+                          </button>
+                          {status === 'pending' && (
+                            <button
+                              className="py-1.5 px-3 bg-gradient-to-r from-accent to-[#66bb6a] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                              onClick={() => {
+                                setConfirmDialog({
+                                  isOpen: true,
+                                  title: 'Confirm Appointment',
+                                  message: `Confirm appointment with ${apt.clientName} on ${formatDate(apt.date)} at ${formatTime(apt.time)}?`,
+                                  type: 'info',
+                                  onConfirm: async () => {
+                                    setConfirmDialog({ ...confirmDialog, isOpen: false })
+                                    try {
+                                      await updateDoc(doc(db, 'appointments', apt.id), {
+                                        status: 'confirmed',
+                                        updatedAt: Timestamp.now()
+                                      })
+                                      showSuccess('Appointment confirmed!')
+                                      loadAppointments()
+                                    } catch (error) {
+                                      console.error('Error confirming appointment:', error)
+                                      showError('Failed to confirm appointment. Please try again.')
+                                    }
+                                  }
+                                })
+                              }}
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          <button 
+                            className="py-1.5 px-3 bg-[#e57373] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom text-xs whitespace-nowrap"
+                            onClick={() => handleDeleteAppointment(apt.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Modal/Popup */}
+      {reschedulingAppointmentId && !showBookingForm && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1002]" onClick={() => {
+          setReschedulingAppointmentId(null)
+          setRescheduleDate('')
+          setRescheduleTime('')
+        }}>
+          <div className="bg-white rounded-2xl p-8 md:p-6 w-[90%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-custom-lg border border-primary/20" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const apt = allAppointments.find(a => a.id === reschedulingAppointmentId)
+              if (!apt) return null
+              
+              return (
+                <>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-text-dark text-2xl md:text-xl font-semibold">Reschedule Appointment</h3>
+                    <button
+                      onClick={() => {
+                        setReschedulingAppointmentId(null)
+                        setRescheduleDate('')
+                        setRescheduleTime('')
+                      }}
+                      className="bg-transparent border-none text-2xl text-text-light cursor-pointer leading-none p-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 hover:bg-primary/20 hover:text-text-dark"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <div className="mb-6 p-4 bg-white rounded-lg border border-primary/20">
+                    <h4 className="font-semibold text-text-dark mb-2">Current Appointment:</h4>
+                    <p className="text-text-light text-sm mb-1"><strong>Client:</strong> {apt.clientName}</p>
+                    <p className="text-text-light text-sm mb-1"><strong>Date:</strong> {formatDate(apt.date)}</p>
+                    <p className="text-text-light text-sm mb-1"><strong>Time:</strong> {formatTime(apt.time)}</p>
+                    <p className="text-text-light text-sm"><strong>Type:</strong> {getTypeName(apt.type)}</p>
+                  </div>
+
+                  <form onSubmit={(e) => handleRequestReschedule(e, apt.id)} className="flex flex-col gap-6">
+                    <div>
+                      <label htmlFor="rescheduleDate-modal" className="block font-semibold text-text-dark mb-2 text-sm">New Date *</label>
+                      <input
+                        type="date"
+                        id="rescheduleDate-modal"
+                        value={rescheduleDate}
+                        onChange={(e) => setRescheduleDate(e.target.value)}
+                        min={getMinDate()}
+                        required
+                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit bg-white focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="rescheduleTime-modal" className="block font-semibold text-text-dark mb-2 text-sm">New Time *</label>
+                      <select
+                        id="rescheduleTime-modal"
+                        value={rescheduleTime}
+                        onChange={(e) => setRescheduleTime(e.target.value)}
+                        required
+                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit bg-white focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
+                      >
+                        <option value="">Select a time</option>
+                        {timeSlots.map(slot => (
+                          <option key={slot} value={slot}>{formatTime(slot)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex gap-4 mt-4 pt-6 border-t border-border md:flex-col">
+                      <button
+                        type="button"
+                        className="flex-1 py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
+                        onClick={() => {
+                          setReschedulingAppointmentId(null)
+                          setRescheduleDate('')
+                          setRescheduleTime('')
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 py-3 px-6 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
+                        disabled={rescheduleLoading}
+                      >
+                        {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
+
       {showBookingForm && (
-        <div className="booking-modal-overlay" onClick={() => setShowBookingForm(false)}>
-          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Book Appointment</h2>
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1001]" onClick={() => {
+          setShowBookingForm(false)
+          if (selectedDate && view === 'calendar') {
+            setShowDayBreakdown(true)
+          } else {
+            setShowDayBreakdown(false)
+            setSelectedDate(null)
+          }
+        }}>
+          <div className="bg-white rounded-2xl p-8 md:p-6 w-[90%] max-w-[600px] max-h-[90vh] overflow-y-auto shadow-custom-lg border border-primary/20" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="m-0 text-text-dark text-2xl md:text-xl font-semibold">Book Appointment</h2>
               <button 
-                className="close-button" 
-                onClick={() => setShowBookingForm(false)}
+                className="bg-transparent border-none text-2xl text-text-light cursor-pointer leading-none p-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 hover:bg-primary/20 hover:text-text-dark" 
+                onClick={() => {
+                  setShowBookingForm(false)
+                  if (selectedDate) {
+                    setShowDayBreakdown(true)
+                  }
+                }}
               >
-                Close
+                ×
               </button>
             </div>
             
-            <form onSubmit={handleBookAppointment} className="booking-form">
-              <div className="form-group">
-                <label>Date *</label>
+            <form onSubmit={handleBookAppointment} className="flex flex-col gap-6">
+              <div className="mb-6">
+                <label className="block font-semibold text-text-dark mb-2 text-sm">Date *</label>
                 <input
                   type="date"
                   value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
                   onChange={(e) => setSelectedDate(new Date(e.target.value))}
                   required
                   min={new Date().toISOString().split('T')[0]}
+                  className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit bg-white focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                 />
               </div>
 
-              <div className="form-group">
-                <label>Client *</label>
+              <div className="mb-6">
+                <label className="block font-semibold text-text-dark mb-2 text-sm">Client *</label>
                 <select
                   value={selectedClient}
                   onChange={(e) => setSelectedClient(e.target.value)}
                   required
+                  className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                 >
                   <option value="">Select a client</option>
                   {clients.map(client => (
@@ -858,13 +1413,14 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                 </select>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Time *</label>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
+                <div className="mb-6 md:mb-0">
+                  <label className="block font-semibold text-text-dark mb-2 text-sm">Time *</label>
                   <select
                     value={selectedTime}
                     onChange={(e) => setSelectedTime(e.target.value)}
                     required
+                    className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                   >
                     <option value="">Select time</option>
                     {timeSlots.map(time => (
@@ -873,12 +1429,13 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Type *</label>
+                <div className="mb-6 md:mb-0">
+                  <label className="block font-semibold text-text-dark mb-2 text-sm">Type *</label>
                   <select
                     value={appointmentType}
                     onChange={(e) => setAppointmentType(e.target.value as 'discovery' | 'mentorship' | 'zoom')}
                     required
+                    className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                   >
                     <option value="discovery">Discovery Call (15 min)</option>
                     <option value="mentorship">Mentorship (60 min)</option>
@@ -887,27 +1444,33 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Notes (Optional)</label>
+              <div className="mb-6">
+                <label className="block font-semibold text-text-dark mb-2 text-sm">Notes (Optional)</label>
                 <textarea
                   value={appointmentNotes}
                   onChange={(e) => setAppointmentNotes(e.target.value)}
                   rows={3}
                   placeholder="Add any notes about this appointment..."
+                  className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit resize-y focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                 />
               </div>
 
-              <div className="modal-actions">
+              <div className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-border md:flex-col">
                 <button 
                   type="button" 
-                  className="cancel-button"
-                  onClick={() => setShowBookingForm(false)}
+                  className="py-3 px-8 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold text-base cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
+                  onClick={() => {
+                    setShowBookingForm(false)
+                    if (selectedDate) {
+                      setShowDayBreakdown(true)
+                    }
+                  }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="submit-button"
+                  className="py-3 px-8 bg-nature-gradient text-white border-none rounded-lg font-semibold text-base cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                   disabled={loading}
                 >
                   {loading ? 'Booking...' : 'Book Appointment'}

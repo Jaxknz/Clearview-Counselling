@@ -19,7 +19,6 @@ import Admin from './pages/Admin'
 import AdminSetup from './pages/AdminSetup'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
-import './App.css'
 
 function App() {
   return (
@@ -27,9 +26,9 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <Router>
-          <div className="app">
+          <div className="min-h-screen flex flex-col">
             <Navbar />
-            <main className="main-content">
+            <main className="flex-1">
               <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />

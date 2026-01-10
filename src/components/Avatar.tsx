@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './Avatar.css'
 
 interface AvatarProps {
   photoURL?: string | null
@@ -45,7 +44,7 @@ function Avatar({ photoURL, displayName, firstName, lastName, size = 40, classNa
       <img
         src={photoURL}
         alt={displayName || 'User'}
-        className={`avatar ${className}`}
+        className={`rounded-full object-cover flex items-center justify-center flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
         onError={() => setImageError(true)}
       />
@@ -54,7 +53,7 @@ function Avatar({ photoURL, displayName, firstName, lastName, size = 40, classNa
 
   return (
     <div
-      className={`avatar avatar-initials ${className}`}
+      className={`rounded-full object-cover flex items-center justify-center flex-shrink-0 text-white font-semibold text-[0.85em] uppercase select-none ${className}`}
       style={{
         width: size,
         height: size,

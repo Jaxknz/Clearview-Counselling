@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { collection, query, getDocs, where } from 'firebase/firestore'
 import { db } from '../config/firebase'
-import './NotificationBell.css'
 
 interface NotificationBellProps {
   onClick?: () => void
@@ -106,10 +105,10 @@ function NotificationBell({ onClick }: NotificationBellProps) {
   }
 
   return (
-    <button className="notification-bell" onClick={onClick} aria-label={`${totalNotifications} notifications`}>
-      <span className="bell-icon"></span>
+    <button className="relative bg-transparent border-none cursor-pointer p-2 text-2xl transition-transform duration-300 hover:scale-110" onClick={onClick} aria-label={`${totalNotifications} notifications`}>
+      <span className="block">🔔</span>
       {totalNotifications > 0 && (
-        <span className="notification-badge">{totalNotifications > 99 ? '99+' : totalNotifications}</span>
+        <span className="absolute top-0 right-0 bg-[#ff4444] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border-2 border-white">{totalNotifications > 99 ? '99+' : totalNotifications}</span>
       )}
     </button>
   )

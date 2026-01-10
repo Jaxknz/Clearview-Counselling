@@ -5,7 +5,6 @@ import { useToast } from '../contexts/ToastContext'
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
-import './Payment.css'
 import type { PlanType } from './SignUp'
 
 interface PaymentData {
@@ -117,68 +116,78 @@ function Payment() {
   }
 
   if (!paymentData) {
-    return <div className="payment-loading">Loading...</div>
+    return <div className="min-h-[calc(100vh-80px)] flex justify-center items-center p-8 bg-bg-light text-center">Loading...</div>
   }
 
   const price = getPlanPrice(paymentData.selectedPlan)
   const planName = getPlanName(paymentData.selectedPlan)
 
   return (
-    <div className="payment-container">
-      <div className="payment-header">
-        <h1>Complete Your Registration</h1>
-        <p>Review your selection and choose a payment method</p>
+    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">Complete Your Registration</h1>
+        <p className="text-lg text-text-light">Review your selection and choose a payment method</p>
       </div>
 
-      <div className="payment-content">
-        <div className="payment-summary">
-          <h2>Order Summary</h2>
-          <div className="summary-item">
-            <span className="summary-label">Plan:</span>
-            <span className="summary-value">{planName}</span>
+      <div className="max-w-6xl mx-auto grid grid-cols-[1fr_1.5fr] lg:grid-cols-1 gap-8 md:gap-6">
+        <div className="bg-white p-8 md:p-6 rounded-2xl shadow-custom-lg">
+          <h2 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">Order Summary</h2>
+          <div className="space-y-4 mb-6">
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-text-dark text-sm">Plan:</span>
+              <span className="text-text-dark">{planName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-text-dark text-sm">Name:</span>
+              <span className="text-text-dark">
+                {paymentData.userInfo?.firstName} {paymentData.userInfo?.lastName}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-text-dark text-sm">Email:</span>
+              <span className="text-text-dark">{paymentData.userInfo?.email}</span>
+            </div>
           </div>
-          <div className="summary-item">
-            <span className="summary-label">Name:</span>
-            <span className="summary-value">
-              {paymentData.userInfo?.firstName} {paymentData.userInfo?.lastName}
-            </span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Email:</span>
-            <span className="summary-value">{paymentData.userInfo?.email}</span>
-          </div>
-          <div className="summary-total">
-            <span className="total-label">Total:</span>
-            <span className="total-value">
+          <div className="pt-4 border-t-2 border-border flex justify-between items-center">
+            <span className="font-bold text-text-dark text-lg">Total:</span>
+            <span className="text-primary font-bold text-xl">
               {price === 0 ? 'Free' : `$${price.toFixed(2)}`}
             </span>
           </div>
         </div>
 
         {price === 0 ? (
-          <div className="free-plan-message">
-            <h3>Free Discovery Call</h3>
-            <p>No payment required. Click below to complete your registration.</p>
+          <div className="bg-white p-10 md:p-8 rounded-2xl shadow-custom-lg text-center">
+            <h3 className="text-text-dark text-2xl md:text-xl mb-4 mt-0">Free Discovery Call</h3>
+            <p className="text-text-light mb-6 text-lg">No payment required. Click below to complete your registration.</p>
             <button 
               onClick={handlePaymentSuccess}
-              className="complete-registration-button"
+              className="py-4 px-8 bg-nature-gradient text-white border-none rounded-lg font-semibold text-lg cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg"
             >
               Complete Registration
             </button>
           </div>
         ) : (
-          <div className="payment-methods">
-            <h2>Select Payment Method</h2>
+          <div className="bg-white p-10 md:p-8 rounded-2xl shadow-custom-lg">
+            <h2 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">Select Payment Method</h2>
             
-            <div className="payment-method-tabs">
+            <div className="flex gap-4 mb-8 border-b-2 border-border md:flex-col">
               <button
-                className={`payment-tab ${paymentMethod === 'paypal' ? 'active' : ''}`}
+                className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap relative bottom-[-2px] ${
+                  paymentMethod === 'paypal' 
+                    ? 'text-primary border-b-primary' 
+                    : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+                }`}
                 onClick={() => setPaymentMethod('paypal')}
               >
                 PayPal
               </button>
               <button
-                className={`payment-tab ${paymentMethod === 'wise' ? 'active' : ''}`}
+                className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap relative bottom-[-2px] ${
+                  paymentMethod === 'wise' 
+                    ? 'text-primary border-b-primary' 
+                    : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+                }`}
                 onClick={() => setPaymentMethod('wise')}
               >
                 Wise
@@ -186,8 +195,8 @@ function Payment() {
             </div>
 
             {paymentMethod === 'paypal' && (
-              <div className="payment-method-content">
-                <div className="paypal-container">
+              <div className="mt-8">
+                <div className="p-6 bg-bg-light rounded-xl border-2 border-border">
                   <PayPalScriptProvider
                     options={{
                       clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || 'YOUR_PAYPAL_CLIENT_ID',
@@ -225,17 +234,17 @@ function Payment() {
             )}
 
             {paymentMethod === 'wise' && (
-              <div className="payment-method-content">
-                <form onSubmit={handleWiseSubmit} className="wise-form">
-                  <div className="wise-info">
-                    <p>
+              <div className="mt-8">
+                <form onSubmit={handleWiseSubmit} className="flex flex-col gap-6">
+                  <div className="p-4 bg-bg-light rounded-lg border-l-4 border-primary">
+                    <p className="text-text-dark m-0 leading-relaxed">
                       Please provide your bank account details for Wise transfer.
                       You will receive payment instructions via email.
                     </p>
                   </div>
                   
-                  <div className="form-group">
-                    <label htmlFor="accountName">Account Holder Name *</label>
+                  <div className="mb-6">
+                    <label htmlFor="accountName" className="block font-semibold text-text-dark mb-2 text-sm">Account Holder Name *</label>
                     <input
                       type="text"
                       id="accountName"
@@ -243,11 +252,12 @@ function Payment() {
                       value={wiseDetails.accountName}
                       onChange={(e) => setWiseDetails({ ...wiseDetails, accountName: e.target.value })}
                       required
+                      className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="accountNumber">Account Number *</label>
+                  <div className="mb-6">
+                    <label htmlFor="accountNumber" className="block font-semibold text-text-dark mb-2 text-sm">Account Number *</label>
                     <input
                       type="text"
                       id="accountNumber"
@@ -255,12 +265,13 @@ function Payment() {
                       value={wiseDetails.accountNumber}
                       onChange={(e) => setWiseDetails({ ...wiseDetails, accountNumber: e.target.value })}
                       required
+                      className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                     />
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="routingNumber">Routing Number *</label>
+                  <div className="grid grid-cols-2 gap-6 md:grid-cols-1">
+                    <div className="mb-6 md:mb-0">
+                      <label htmlFor="routingNumber" className="block font-semibold text-text-dark mb-2 text-sm">Routing Number *</label>
                       <input
                         type="text"
                         id="routingNumber"
@@ -268,10 +279,11 @@ function Payment() {
                         value={wiseDetails.routingNumber}
                         onChange={(e) => setWiseDetails({ ...wiseDetails, routingNumber: e.target.value })}
                         required
+                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                       />
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="swiftCode">SWIFT Code *</label>
+                    <div className="mb-6 md:mb-0">
+                      <label htmlFor="swiftCode" className="block font-semibold text-text-dark mb-2 text-sm">SWIFT Code *</label>
                       <input
                         type="text"
                         id="swiftCode"
@@ -279,11 +291,12 @@ function Payment() {
                         value={wiseDetails.swiftCode}
                         onChange={(e) => setWiseDetails({ ...wiseDetails, swiftCode: e.target.value })}
                         required
+                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  <button type="submit" className="wise-submit-button">
+                  <button type="submit" className="py-4 px-8 bg-nature-gradient text-white border-none rounded-lg font-semibold text-lg cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg mt-4">
                     Submit Payment Details
                   </button>
                 </form>
@@ -291,7 +304,7 @@ function Payment() {
             )}
 
             {!paymentMethod && (
-              <div className="payment-method-prompt">
+              <div className="text-center py-12 text-text-light">
                 <p>Please select a payment method above</p>
               </div>
             )}

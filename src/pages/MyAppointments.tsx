@@ -4,7 +4,6 @@ import { useToast } from '../contexts/ToastContext'
 import { collection, query, getDocs, doc, updateDoc, addDoc, where, Timestamp, getDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import ConfirmDialog from '../components/ConfirmDialog'
-import './MyAppointments.css'
 
 interface Appointment {
   id: string
@@ -330,45 +329,57 @@ function MyAppointments() {
 
   if (!currentUser) {
     return (
-      <div className="appointments-container">
-        <div className="appointments-content">
-          <p>Please sign in to view your appointments.</p>
+      <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-gradient-to-b from-bg-light via-sky/10 to-nature-green/10">
+        <div className="max-w-4xl mx-auto bg-gradient-to-br from-white via-sky/10 to-nature-green/10 p-12 md:p-8 rounded-2xl shadow-custom-lg border border-primary/20">
+          <p className="text-text-dark text-center">Please sign in to view your appointments.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="appointments-container">
-      <div className="appointments-header">
-        <h1>My Appointments</h1>
-        <p>View and manage your scheduled appointments</p>
+    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">My Appointments</h1>
+        <p className="text-lg text-text-light">View and manage your scheduled appointments</p>
       </div>
 
-      <div className="appointments-content">
-        <div className="appointments-header-actions">
-        <div className="appointments-filters">
+      <div className="max-w-4xl mx-auto bg-white p-10 md:p-6 rounded-2xl shadow-custom-lg">
+        <div className="flex justify-between items-center mb-8 pb-6 border-b-2 border-border flex-wrap gap-4 md:flex-col md:items-stretch">
+        <div className="flex gap-4 flex-wrap md:w-full">
           <button
-            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
+            className={`py-3 px-6 rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 border-2 ${
+              filter === 'all' 
+                ? 'bg-primary text-white border-primary' 
+                : 'bg-bg-light border-border hover:border-primary hover:bg-primary/10'
+            }`}
             onClick={() => setFilter('all')}
           >
             All
           </button>
           <button
-            className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
+            className={`py-3 px-6 rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 border-2 ${
+              filter === 'upcoming' 
+                ? 'bg-primary text-white border-primary' 
+                : 'bg-bg-light border-border hover:border-primary hover:bg-primary/10'
+            }`}
             onClick={() => setFilter('upcoming')}
           >
             Upcoming
           </button>
           <button
-            className={`filter-button ${filter === 'past' ? 'active' : ''}`}
+            className={`py-3 px-6 rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 border-2 ${
+              filter === 'past' 
+                ? 'bg-primary text-white border-primary' 
+                : 'bg-bg-light border-border hover:border-primary hover:bg-primary/10'
+            }`}
             onClick={() => setFilter('past')}
           >
             Past
           </button>
         </div>
         <button
-          className="book-appointment-button"
+          className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 whitespace-nowrap hover:-translate-y-0.5 hover:shadow-custom md:w-full"
           onClick={() => setShowBookingForm(!showBookingForm)}
         >
           {showBookingForm ? 'Cancel Booking' : '+ Request Appointment'}
@@ -376,16 +387,17 @@ function MyAppointments() {
       </div>
 
         {showBookingForm && (
-          <div className="booking-form-container">
-            <h2>Book New Appointment</h2>
-            <form onSubmit={handleBookAppointment} className="booking-form">
-              <div className="form-group">
-                <label htmlFor="bookingType">Appointment Type *</label>
+          <div className="mb-8 p-8 bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 rounded-xl border-2 border-primary/20">
+            <h2 className="mt-0 mb-6 text-text-dark text-2xl md:text-xl">Book New Appointment</h2>
+            <form onSubmit={handleBookAppointment} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="bookingType" className="font-semibold text-text-dark text-sm">Appointment Type *</label>
                 <select
                   id="bookingType"
                   value={bookingType}
                   onChange={(e) => setBookingType(e.target.value as 'discovery' | 'mentorship' | 'zoom')}
                   required
+                  className="py-3 px-3 border-2 border-border rounded-lg text-base font-inherit transition-[border-color] duration-300 focus:outline-none focus:border-primary"
                 >
                   <option value="discovery">Discovery Call (15 min)</option>
                   <option value="mentorship">Mentorship Session (60 min)</option>
@@ -393,8 +405,8 @@ function MyAppointments() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="bookingDate">Date *</label>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="bookingDate" className="font-semibold text-text-dark text-sm">Date *</label>
                 <input
                   type="date"
                   id="bookingDate"
@@ -402,16 +414,18 @@ function MyAppointments() {
                   onChange={(e) => setBookingDate(e.target.value)}
                   min={getMinDate()}
                   required
+                  className="py-3 px-3 border-2 border-border rounded-lg text-base font-inherit transition-[border-color] duration-300 focus:outline-none focus:border-primary"
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="bookingTime">Time *</label>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="bookingTime" className="font-semibold text-text-dark text-sm">Time *</label>
                 <select
                   id="bookingTime"
                   value={bookingTime}
                   onChange={(e) => setBookingTime(e.target.value)}
                   required
+                  className="py-3 px-3 border-2 border-border rounded-lg text-base font-inherit transition-[border-color] duration-300 focus:outline-none focus:border-primary"
                 >
                   <option value="">Select a time</option>
                   {timeSlots.map(slot => (
@@ -420,21 +434,22 @@ function MyAppointments() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="bookingNotes">Notes (Optional)</label>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="bookingNotes" className="font-semibold text-text-dark text-sm">Notes (Optional)</label>
                 <textarea
                   id="bookingNotes"
                   value={bookingNotes}
                   onChange={(e) => setBookingNotes(e.target.value)}
                   rows={4}
                   placeholder="Any additional information or preferences..."
+                  className="py-3 px-3 border-2 border-border rounded-lg text-base font-inherit resize-y min-h-[100px] transition-[border-color] duration-300 focus:outline-none focus:border-primary"
                 />
               </div>
 
-              <div className="form-actions">
+              <div className="flex gap-4 justify-end mt-2 md:flex-col">
                 <button
                   type="button"
-                  className="cancel-booking-button"
+                  className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:border-text-dark hover:bg-text-light hover:text-white md:w-full"
                   onClick={() => {
                     setShowBookingForm(false)
                     setBookingDate('')
@@ -446,7 +461,7 @@ function MyAppointments() {
                 </button>
                 <button
                   type="submit"
-                  className="submit-booking-button"
+                  className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                   disabled={bookingLoading}
                 >
                   {bookingLoading ? 'Booking...' : 'Request Appointment'}
@@ -457,11 +472,11 @@ function MyAppointments() {
         )}
 
         {loading ? (
-          <div className="loading-message">
+          <div className="text-center py-12 text-text-light">
             <p>Loading appointments...</p>
           </div>
         ) : filteredAppointments.length === 0 ? (
-          <div className="no-appointments">
+          <div className="text-center py-12 text-text-light">
             <p>
               {filter === 'upcoming' 
                 ? 'You have no upcoming appointments.' 
@@ -469,62 +484,77 @@ function MyAppointments() {
                 ? 'You have no past appointments.'
                 : 'You have no appointments scheduled.'}
             </p>
-            <p className="help-text">Request an appointment using the form above. You'll see the status of all your appointments here.</p>
+            <p className="mt-4 text-sm">Request an appointment using the form above. You'll see the status of all your appointments here.</p>
           </div>
         ) : (
-          <div className="appointments-list">
+          <div className="flex flex-col gap-6">
             {filteredAppointments.map(appointment => {
               const isPast = appointment.date < new Date()
               const isUpcoming = appointment.date >= new Date()
+              const status = appointment.status || 'pending'
               
               return (
                 <div 
                   key={appointment.id} 
-                  className={`appointment-card ${appointment.status === 'cancelled' ? 'cancelled' : ''} ${appointment.status === 'pending' || appointment.status === undefined ? 'pending' : ''} ${isPast ? 'past' : ''}`}
+                  className={`border-2 rounded-xl p-6 transition-all duration-300 ${
+                    status === 'cancelled' 
+                      ? 'opacity-60 border-[#e8a5a5] bg-[#fef5f5]' 
+                      : status === 'pending' 
+                      ? 'border-[#f5d89c] bg-[#fffaf5] border-l-4 hover:border-[#f0c97a] hover:shadow-[0_4px_12px_rgba(245,216,156,0.2)]'
+                      : isPast
+                      ? 'opacity-70 bg-bg-light border-border'
+                      : 'border-border'
+                  } hover:shadow-custom hover:border-primary`}
                 >
-                  <div className="appointment-header">
-                    <div className="appointment-date-time">
-                      <div className="appointment-date">{formatDate(appointment.date)}</div>
-                      <div className="appointment-time">{formatTime(appointment.time)}</div>
-                      <div className="appointment-duration">Duration: {appointment.duration} min</div>
+                  <div className="flex justify-between items-start mb-4 flex-wrap gap-4 md:flex-col">
+                    <div className="flex-1">
+                      <div className="text-xl font-bold text-text-dark mb-1">{formatDate(appointment.date)}</div>
+                      <div className="text-lg text-primary font-semibold mb-1">{formatTime(appointment.time)}</div>
+                      <div className="text-sm text-text-light">Duration: {appointment.duration} min</div>
                     </div>
-                    <div className="appointment-status">
-                      <span className={`status-badge status-${appointment.status || 'pending'}`}>
-                        {(appointment.status || 'pending') === 'confirmed' ? 'Confirmed' : 
-                         (appointment.status || 'pending') === 'cancelled' ? 'Cancelled' : 
+                    <div className="flex-shrink-0">
+                      <span className={`py-2 px-4 rounded-full text-sm font-semibold ${
+                        status === 'pending' 
+                          ? 'bg-[#fff8e8] text-[#b8860b]'
+                          : status === 'confirmed'
+                          ? 'bg-[#e8f5e9] text-[#2e7d32]'
+                          : 'bg-[#fce4ec] text-[#c2185b]'
+                      }`}>
+                        {status === 'confirmed' ? 'Confirmed' : 
+                         status === 'cancelled' ? 'Cancelled' : 
                          'Pending Confirmation'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="appointment-details">
-                    <div className="appointment-type">
-                      <strong>Type:</strong> {getTypeName(appointment.type)}
+                  <div className="mb-4 pt-4 border-t border-border">
+                    <div className="text-text-dark mb-2">
+                      <strong className="text-text-dark mr-2">Type:</strong> {getTypeName(appointment.type)}
                     </div>
                     {appointment.notes && (
-                      <div className="appointment-notes">
-                        <strong>Notes:</strong> {appointment.notes}
+                      <div className="text-text-light italic mt-2">
+                        <strong className="text-text-dark not-italic mr-2">Notes:</strong> {appointment.notes}
                       </div>
                     )}
                   </div>
 
                   {/* Status-specific messages */}
-                  {appointment.status === 'pending' && (
-                    <div className="appointment-status-message pending-message">
-                      <strong>Status: Pending</strong>
-                      <p>Your appointment request is awaiting confirmation. You will be notified once it's been reviewed and confirmed by the admin.</p>
+                  {status === 'pending' && (
+                    <div className="mt-4 p-4 rounded-lg border-l-4 border-[#f5d89c] bg-[#fff8e8] text-[#b8860b]">
+                      <strong className="block mb-2 text-base text-[#b8860b]">Status: Pending</strong>
+                      <p className="m-0 text-sm leading-relaxed">Your appointment request is awaiting confirmation. You will be notified once it's been reviewed and confirmed by the admin.</p>
                     </div>
                   )}
 
-                  {appointment.status === 'confirmed' && isUpcoming && (
+                  {status === 'confirmed' && isUpcoming && (
                     <>
-                      <div className="appointment-status-message confirmed-message">
-                        <strong>Status: Confirmed</strong>
-                        <p>This appointment has been confirmed. We look forward to meeting with you!</p>
+                      <div className="mt-4 p-4 rounded-lg border-l-4 border-[#81c784] bg-[#e8f5e9] text-[#2e7d32]">
+                        <strong className="block mb-2 text-base text-[#2e7d32]">Status: Confirmed</strong>
+                        <p className="m-0 text-sm leading-relaxed">This appointment has been confirmed. We look forward to meeting with you!</p>
                       </div>
-                      <div className="appointment-actions">
+                      <div className="flex gap-4 mt-4 pt-4 border-t border-border flex-wrap md:flex-col">
                         <button
-                          className="cancel-button"
+                          className="py-3 px-6 bg-[#e57373] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom md:w-full"
                           onClick={() => handleCancelAppointment(appointment.id)}
                         >
                           Cancel Appointment
@@ -533,17 +563,17 @@ function MyAppointments() {
                     </>
                   )}
 
-                  {appointment.status === 'confirmed' && isPast && (
-                    <div className="appointment-status-message confirmed-message">
-                      <strong>Status: Confirmed (Past)</strong>
-                      <p>This appointment was completed.</p>
+                  {status === 'confirmed' && isPast && (
+                    <div className="mt-4 p-4 rounded-lg border-l-4 border-[#81c784] bg-[#e8f5e9] text-[#2e7d32]">
+                      <strong className="block mb-2 text-base text-[#2e7d32]">Status: Confirmed (Past)</strong>
+                      <p className="m-0 text-sm leading-relaxed">This appointment was completed.</p>
                     </div>
                   )}
 
-                  {appointment.status === 'cancelled' && (
-                    <div className="appointment-status-message cancelled-message">
-                      <strong>Status: Cancelled</strong>
-                      <p>This appointment has been cancelled.</p>
+                  {status === 'cancelled' && (
+                    <div className="mt-4 p-4 rounded-lg border-l-4 border-[#e57373] bg-[#fce4ec] text-[#c2185b]">
+                      <strong className="block mb-2 text-base text-[#c2185b]">Status: Cancelled</strong>
+                      <p className="m-0 text-sm leading-relaxed">This appointment has been cancelled.</p>
                     </div>
                   )}
                 </div>

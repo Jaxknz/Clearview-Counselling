@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import ToastItem, { Toast } from '../components/Toast'
-import '../components/Toast.css'
 
 interface ToastContextType {
   showToast: (message: string, type?: 'success' | 'error' | 'warning' | 'info', duration?: number) => void
@@ -53,9 +52,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo }}>
       {children}
-      <div className="toast-container">
+      <div className="fixed top-[100px] md:top-[100px] top-20 md:top-[100px] right-4 md:right-8 left-4 md:left-auto z-[10000] flex flex-col items-stretch md:items-end pointer-events-none">
         {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onClose={removeToast} />
+          <div key={toast.id} className="pointer-events-auto">
+            <ToastItem toast={toast} onClose={removeToast} />
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

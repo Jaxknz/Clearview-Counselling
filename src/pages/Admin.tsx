@@ -5,7 +5,6 @@ import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, where, Timest
 import { db } from '../config/firebase'
 import AdminCalendar from '../components/AdminCalendar'
 import ConfirmDialog from '../components/ConfirmDialog'
-import './Admin.css'
 
 interface Appointment {
   id: string
@@ -38,7 +37,7 @@ interface ClientData {
 type AdminTab = 'clients' | 'calendar' | 'messages' | 'contactMessages'
 
 function Admin() {
-  const { currentUser, signout, isAdmin, loading: authLoading, userName } = useAuth()
+  const { currentUser, isAdmin, loading: authLoading, userName } = useAuth()
   const { showSuccess, showError } = useToast()
   const [activeTab, setActiveTab] = useState<AdminTab>('clients')
   const [clients, setClients] = useState<ClientData[]>([])
@@ -70,6 +69,7 @@ function Admin() {
   const [contactMessages, setContactMessages] = useState<any[]>([])
   const [loadingContactMessages, setLoadingContactMessages] = useState(false)
   const [selectedContactMessage, setSelectedContactMessage] = useState<any | null>(null)
+  const [clientSearchQuery, setClientSearchQuery] = useState<string>('')
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean
     title: string
@@ -89,11 +89,6 @@ function Admin() {
     '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
     '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
   ]
-
-  const handleLogout = async () => {
-    await signout()
-    setSelectedClient(null)
-  }
 
   const getPlanName = (plan: string): string => {
     switch (plan) {
@@ -633,7 +628,7 @@ function Admin() {
 
   if (authLoading) {
     return (
-      <div className="admin-loading">
+      <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center bg-bg-light p-8 text-center">
         <div>Loading...</div>
       </div>
     )
@@ -641,10 +636,10 @@ function Admin() {
 
   if (!currentUser || !isAdmin) {
     return (
-      <div className="admin-access-denied">
-        <h1>Access Denied</h1>
-        <p>You must be an admin user to access this portal.</p>
-        <p>Please sign in with an admin account.</p>
+      <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center bg-bg-light p-8 text-center">
+        <h1 className="text-text-dark text-3xl md:text-2xl mb-4">Access Denied</h1>
+        <p className="text-text-light text-lg mb-2">You must be an admin user to access this portal.</p>
+        <p className="text-text-light text-lg">Please sign in with an admin account.</p>
       </div>
     )
   }
@@ -657,16 +652,16 @@ function Admin() {
   }
 
   return (
-    <div className="admin-container">
+    <div className="min-h-screen bg-bg-light">
       {pendingAppointmentsCount > 0 && (
-        <div className="pending-notification-banner">
-          <div className="pending-notification-content">
-            <span className="pending-notification-icon"></span>
-            <span className="pending-notification-text">
-              You have <strong>{pendingAppointmentsCount}</strong> pending appointment{pendingAppointmentsCount !== 1 ? 's' : ''} requiring attention
+        <div className="bg-gradient-to-r from-[#f5d89c] to-[#f0c97a] text-[#8b6914] py-4 px-8 md:px-4 shadow-custom border-b-[3px] border-[#f0c97a]">
+          <div className="flex items-center gap-4 max-w-[1200px] mx-auto flex-wrap">
+            <span className="w-5 h-5 rounded-full bg-[#8b6914] inline-block flex-shrink-0"></span>
+            <span className="flex-1 font-semibold text-base">
+              You have <strong className="text-lg text-[#8b6914]">{pendingAppointmentsCount}</strong> pending appointment{pendingAppointmentsCount !== 1 ? 's' : ''} requiring attention
             </span>
             <button
-              className="pending-notification-button"
+              className="py-2 px-6 bg-white text-[#8b6914] border-2 border-[#8b6914] rounded-lg font-bold cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-[#8b6914] hover:text-white hover:-translate-y-0.5 hover:shadow-custom"
               onClick={() => setActiveTab('calendar')}
             >
               View Pending Appointments
@@ -674,95 +669,142 @@ function Admin() {
           </div>
         </div>
       )}
-      <div className="admin-header">
+      <div className="bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 py-6 px-8 md:px-4 shadow-custom border-b border-border">
         <div>
-          <h1>Admin Portal</h1>
-          <p className="admin-user-info">Signed in as: {adminName || userName || currentUser.email}</p>
+          <h1 className="text-text-dark text-3xl md:text-2xl mb-1 m-0 font-semibold">Admin Portal</h1>
+          <p className="text-text-light text-sm m-0">Signed in as: {adminName || userName || currentUser.email}</p>
         </div>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
       </div>
 
-      <div className="admin-tabs">
-        <button 
-          className={`admin-tab ${activeTab === 'clients' ? 'active' : ''}`}
-          onClick={() => setActiveTab('clients')}
-        >
-          Clients ({clients.length})
-        </button>
-        <button 
-          className={`admin-tab ${activeTab === 'calendar' ? 'active' : ''}`}
-          onClick={() => setActiveTab('calendar')}
-        >
-          Calendar
-          {pendingAppointmentsCount > 0 && (
-            <span className="tab-notification-badge">{pendingAppointmentsCount}</span>
-          )}
-        </button>
-        <button 
-          className={`admin-tab ${activeTab === 'messages' ? 'active' : ''}`}
-          onClick={() => setActiveTab('messages')}
-        >
-          Messages
-        </button>
-        <button 
-          className={`admin-tab ${activeTab === 'contactMessages' ? 'active' : ''}`}
-          onClick={() => setActiveTab('contactMessages')}
-        >
-          Contact Form
-          {contactMessages.filter((msg: any) => !msg.read).length > 0 && (
-            <span className="tab-notification-badge">{contactMessages.filter((msg: any) => !msg.read).length}</span>
-          )}
-        </button>
+      <div className="bg-gradient-to-r from-white via-bg-light to-white border-b-2 border-border overflow-x-auto">
+        <div className="flex justify-center">
+          <div className="flex">
+            <button 
+              className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                activeTab === 'clients' 
+                  ? 'text-primary border-b-primary' 
+                  : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+              }`}
+              onClick={() => setActiveTab('clients')}
+            >
+              Clients ({clients.length})
+            </button>
+            <button 
+              className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
+                activeTab === 'calendar' 
+                  ? 'text-primary border-b-primary' 
+                  : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+              }`}
+              onClick={() => setActiveTab('calendar')}
+            >
+              <span>Calendar</span>
+              {pendingAppointmentsCount > 0 && (
+                <span className="inline-block py-1 px-2 bg-primary text-white rounded-full text-xs font-bold min-w-[20px] text-center">{pendingAppointmentsCount}</span>
+              )}
+            </button>
+            <button 
+              className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                activeTab === 'messages' 
+                  ? 'text-primary border-b-primary' 
+                  : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+              }`}
+              onClick={() => setActiveTab('messages')}
+            >
+              Messages
+            </button>
+            <button 
+              className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap flex-shrink-0 flex items-center gap-2 ${
+                activeTab === 'contactMessages' 
+                  ? 'text-primary border-b-primary' 
+                  : 'text-text-light border-b-transparent hover:text-primary hover:bg-primary/5'
+              }`}
+              onClick={() => setActiveTab('contactMessages')}
+            >
+              <span>Contact Form</span>
+              {contactMessages.filter((msg: any) => !msg.read).length > 0 && (
+                <span className="inline-block py-1 px-2 bg-primary text-white rounded-full text-xs font-bold min-w-[20px] text-center">{contactMessages.filter((msg: any) => !msg.read).length}</span>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       {activeTab === 'clients' && (
-        <div className="admin-content">
-          <div className="admin-sidebar">
-            <h2>Clients ({clients.length})</h2>
-            {loading ? (
-              <p className="loading-clients">Loading clients...</p>
-            ) : (
-              <div className="clients-list">
-                {clients.length === 0 ? (
-                  <p className="no-clients">No clients registered yet</p>
+        <div className="max-w-[1600px] mx-auto px-8 py-6">
+          <div className="flex h-[calc(100vh-250px)] gap-6">
+            <div className="w-80 bg-gradient-to-b from-primary/10 via-sky/10 to-white border-r-2 border-border flex-shrink-0 flex flex-col rounded-l-xl shadow-custom-lg">
+              <div className="p-6 border-b-2 border-border flex-shrink-0 bg-gradient-to-r from-primary/15 to-sky/10">
+                <h2 className="text-text-dark text-2xl mb-4 font-semibold">Clients ({clients.length})</h2>
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={clientSearchQuery}
+                  onChange={(e) => setClientSearchQuery(e.target.value)}
+                  className="w-full py-2 px-3 border-2 border-border rounded-lg text-sm transition-all duration-300 font-inherit bg-white/90 focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none focus:bg-white"
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 bg-white/60">
+                {loading ? (
+                  <p className="text-text-light text-center py-8">Loading clients...</p>
                 ) : (
-                  clients.map((client) => (
-                    <div
-                      key={client.id}
-                      className={`client-item ${selectedClient?.id === client.id ? 'active' : ''}`}
-                      onClick={() => setSelectedClient(client)}
-                    >
-                      <div className="client-name">
-                        {client.firstName} {client.lastName}
-                      </div>
-                      <div className="client-plan">{getPlanName(client.plan)}</div>
-                    </div>
-                  ))
+                  <div className="flex flex-col gap-2">
+                    {(() => {
+                      const filteredClients = clients.filter(client => {
+                        if (!clientSearchQuery.trim()) return true
+                        const searchLower = clientSearchQuery.toLowerCase()
+                        const fullName = `${client.firstName} ${client.lastName}`.toLowerCase()
+                        return fullName.includes(searchLower)
+                      })
+                      
+                      if (filteredClients.length === 0) {
+                        return (
+                          <p className="text-text-light text-center py-8">
+                            {clientSearchQuery ? 'No clients found' : 'No clients registered yet'}
+                          </p>
+                        )
+                      }
+                      
+                      return filteredClients.map((client) => (
+                        <div
+                          key={client.id}
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                            selectedClient?.id === client.id 
+                              ? 'border-primary bg-gradient-to-r from-primary/15 to-sky/10 shadow-md' 
+                              : 'border-border/60 bg-white/80 hover:border-primary hover:bg-gradient-to-r hover:from-sky/10 hover:to-nature-green/5'
+                          }`}
+                          onClick={() => setSelectedClient(client)}
+                        >
+                          <div className="font-semibold text-text-dark mb-1 text-sm">
+                            {client.firstName} {client.lastName}
+                          </div>
+                          <div className="text-xs text-text-light">{getPlanName(client.plan)}</div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="admin-main">
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              <div className="h-full bg-gradient-to-br from-white via-bg-light to-primary/5 p-8 rounded-r-xl shadow-custom-lg border border-border">
             {selectedClient ? (
-              <div className="client-details">
-                <h2>Client Details</h2>
-                <div className="details-section">
-                  <h3>Personal Information</h3>
-                  <div className="detail-row">
-                    <span className="detail-label">Name:</span>
-                    <span className="detail-value">
+              <div>
+                <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-4 border-b-2 border-border bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg -mx-4 -mt-4">Client Details</h2>
+                <div className="mb-8 pb-6 border-b-2 border-border bg-gradient-to-r from-sky/10 via-white to-nature-green/10 p-6 rounded-lg">
+                  <h3 className="text-text-dark text-xl md:text-lg mb-4 pb-2 border-b border-border">Personal Information</h3>
+                  <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                    <span className="font-semibold text-text-dark text-sm">Name:</span>
+                    <span className="text-text-dark">
                       {selectedClient.firstName} {selectedClient.lastName}
                     </span>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Email:</span>
-                    <span className="detail-value">
+                  <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4 items-center">
+                    <span className="font-semibold text-text-dark text-sm">Email:</span>
+                    <span className="text-text-dark flex items-center gap-2 flex-wrap">
                       {selectedClient.email}
                       <button
-                        className="email-client-button"
+                        className="py-1.5 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom"
                         onClick={() => handleEmailClient(selectedClient.email)}
                         title="Send email to client"
                       >
@@ -770,59 +812,59 @@ function Admin() {
                       </button>
                     </span>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Phone:</span>
-                    <span className="detail-value">{selectedClient.phone}</span>
+                  <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                    <span className="font-semibold text-text-dark text-sm">Phone:</span>
+                    <span className="text-text-dark">{selectedClient.phone}</span>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Plan:</span>
-                    <span className="detail-value">{getPlanName(selectedClient.plan)}</span>
+                  <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                    <span className="font-semibold text-text-dark text-sm">Plan:</span>
+                    <span className="text-text-dark">{getPlanName(selectedClient.plan)}</span>
                   </div>
                   {selectedClient.paymentStatus && (
-                    <div className="detail-row">
-                      <span className="detail-label">Payment Status:</span>
-                      <span className="detail-value">
+                    <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                      <span className="font-semibold text-text-dark text-sm">Payment Status:</span>
+                      <span className="text-text-dark">
                         {selectedClient.paymentStatus === 'completed' ? 'Completed' : 'Pending'}
                       </span>
                     </div>
                   )}
                   {selectedClient.paymentMethod && selectedClient.paymentMethod !== 'free' && (
-                    <div className="detail-row">
-                      <span className="detail-label">Payment Method:</span>
-                      <span className="detail-value">
+                    <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                      <span className="font-semibold text-text-dark text-sm">Payment Method:</span>
+                      <span className="text-text-dark">
                         {selectedClient.paymentMethod === 'paypal' ? 'PayPal' : 
                          selectedClient.paymentMethod === 'wise' ? 'Wise' : 
                          selectedClient.paymentMethod}
                       </span>
                     </div>
                   )}
-                  <div className="detail-row">
-                    <span className="detail-label">Submitted:</span>
-                    <span className="detail-value">{selectedClient.submittedAt}</span>
+                  <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                    <span className="font-semibold text-text-dark text-sm">Submitted:</span>
+                    <span className="text-text-dark">{selectedClient.submittedAt}</span>
                   </div>
                 </div>
 
                 {selectedClient.questionnaireData && (
-                  <div className="details-section">
-                    <h3>Questionnaire Responses</h3>
-                    <div className="questionnaire-responses">
+                  <div className="mb-8 pb-6 border-b-2 border-border">
+                    <h3 className="text-text-dark text-xl md:text-lg mb-4 pb-2 border-b border-border">Questionnaire Responses</h3>
+                    <div className="space-y-3">
                       {Object.entries(selectedClient.questionnaireData).map(([key, value]) => (
-                        <div key={key} className="response-item">
-                          <span className="response-label">
+                        <div key={key} className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4">
+                          <span className="font-semibold text-text-dark text-sm">
                             {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                           </span>
-                          <span className="response-value">{String(value)}</span>
+                          <span className="text-text-dark">{String(value)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <div className="details-section">
-                  <div className="section-header">
-                    <h3>Appointments</h3>
+                <div className="mb-8 pb-6 border-b-2 border-border">
+                  <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+                    <h3 className="text-text-dark text-xl md:text-lg mb-0">Appointments</h3>
                     <button
-                      className="book-appointment-btn"
+                      className="py-2 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-sm md:w-full"
                       onClick={() => setShowBookingForm(!showBookingForm)}
                     >
                       {showBookingForm ? 'Cancel Booking' : '+ Book Appointment'}
@@ -830,16 +872,17 @@ function Admin() {
                   </div>
 
                   {showBookingForm && (
-                    <div className="booking-form-container">
-                      <h4>Book New Appointment</h4>
-                      <form onSubmit={handleBookAppointment} className="booking-form">
-                        <div className="form-group">
-                          <label htmlFor="bookingType">Appointment Type *</label>
+                    <div className="mt-6 p-6 bg-bg-light rounded-xl border-2 border-border">
+                      <h4 className="text-text-dark text-lg md:text-base mb-4 mt-0">Book New Appointment</h4>
+                      <form onSubmit={handleBookAppointment} className="flex flex-col gap-6">
+                        <div className="mb-6">
+                          <label htmlFor="bookingType" className="block font-semibold text-text-dark mb-2 text-sm">Appointment Type *</label>
                           <select
                             id="bookingType"
                             value={bookingType}
                             onChange={(e) => setBookingType(e.target.value as 'discovery' | 'mentorship' | 'zoom')}
                             required
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           >
                             <option value="discovery">Discovery Call (15 min)</option>
                             <option value="mentorship">Mentorship Session (60 min)</option>
@@ -847,8 +890,8 @@ function Admin() {
                           </select>
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="bookingDate">Date *</label>
+                        <div className="mb-6">
+                          <label htmlFor="bookingDate" className="block font-semibold text-text-dark mb-2 text-sm">Date *</label>
                           <input
                             type="date"
                             id="bookingDate"
@@ -856,16 +899,18 @@ function Admin() {
                             onChange={(e) => setBookingDate(e.target.value)}
                             min={getMinDate()}
                             required
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           />
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="bookingTime">Time *</label>
+                        <div className="mb-6">
+                          <label htmlFor="bookingTime" className="block font-semibold text-text-dark mb-2 text-sm">Time *</label>
                           <select
                             id="bookingTime"
                             value={bookingTime}
                             onChange={(e) => setBookingTime(e.target.value)}
                             required
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           >
                             <option value="">Select a time</option>
                             {timeSlots.map(slot => (
@@ -874,21 +919,22 @@ function Admin() {
                           </select>
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="bookingNotes">Notes (Optional)</label>
+                        <div className="mb-6">
+                          <label htmlFor="bookingNotes" className="block font-semibold text-text-dark mb-2 text-sm">Notes (Optional)</label>
                           <textarea
                             id="bookingNotes"
                             value={bookingNotes}
                             onChange={(e) => setBookingNotes(e.target.value)}
                             rows={4}
                             placeholder="Add any notes about this appointment..."
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit resize-y focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           />
                         </div>
 
-                        <div className="form-actions">
+                        <div className="flex gap-4 justify-end mt-2 md:flex-col">
                           <button
                             type="button"
-                            className="cancel-booking-btn"
+                            className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
                             onClick={() => {
                               setShowBookingForm(false)
                               setBookingDate('')
@@ -900,7 +946,7 @@ function Admin() {
                           </button>
                           <button
                             type="submit"
-                            className="submit-booking-btn"
+                            className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                             disabled={bookingLoading}
                           >
                             {bookingLoading ? 'Booking...' : 'Create Appointment'}
@@ -910,45 +956,61 @@ function Admin() {
                     </div>
                   )}
 
-                  <div className="appointments-history">
-                    <h4>All Appointments</h4>
+                  <div className="mt-8">
+                    <h4 className="text-text-dark text-xl md:text-lg mb-4">All Appointments</h4>
                     {loadingAppointments ? (
-                      <p className="loading-appointments">Loading appointments...</p>
+                      <p className="text-text-light text-center py-8">Loading appointments...</p>
                     ) : clientAppointments.length === 0 ? (
-                      <p className="no-appointments">No appointments scheduled yet</p>
+                      <p className="text-text-light text-center py-8">No appointments scheduled yet</p>
                     ) : (
-                      <div className="appointments-list">
+                      <div className="flex flex-col gap-4">
                         {clientAppointments.map(appointment => {
                           const isPast = appointment.date < new Date()
+                          const status = appointment.status || 'pending'
                           return (
                             <div
                               key={appointment.id}
-                              className={`appointment-item ${appointment.status === 'cancelled' ? 'cancelled' : ''} ${isPast ? 'past' : ''} ${selectedAppointment?.id === appointment.id ? 'selected' : ''}`}
+                              className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                                appointment.status === 'cancelled' 
+                                  ? 'opacity-60 border-[#e8a5a5] bg-[#fef5f5]' 
+                                  : isPast
+                                  ? 'opacity-70 bg-bg-light border-border'
+                                  : 'border-border bg-white'
+                              } ${
+                                selectedAppointment?.id === appointment.id 
+                                  ? 'border-primary bg-primary/10 shadow-md' 
+                                  : 'hover:border-primary hover:shadow-custom'
+                              }`}
                               onClick={() => handleAppointmentClick(appointment)}
-                              style={{ cursor: 'pointer' }}
                             >
-                              <div className="appointment-header-item">
-                                <div className="appointment-date-time">
-                                  <div className="appointment-date">{formatDate(appointment.date)}</div>
-                                  <div className="appointment-time">{formatTime(appointment.time)}</div>
-                                  <div className="appointment-duration">Duration: {appointment.duration} min</div>
+                              <div className="flex justify-between items-start mb-3 flex-wrap gap-4 md:flex-col">
+                                <div className="flex-1">
+                                  <div className="text-xl font-bold text-text-dark mb-1">{formatDate(appointment.date)}</div>
+                                  <div className="text-lg text-primary font-semibold mb-1">{formatTime(appointment.time)}</div>
+                                  <div className="text-sm text-text-light">Duration: {appointment.duration} min</div>
                                 </div>
-                                <div className="appointment-status">
-                                  <span className={`status-badge status-${appointment.status || 'pending'}`}>
-                                    {appointment.status === 'confirmed' ? 'Confirmed' : 
-                                     appointment.status === 'cancelled' ? 'Cancelled' : 
+                                <div className="flex-shrink-0">
+                                  <span className={`py-2 px-4 rounded-full text-sm font-semibold ${
+                                    status === 'pending' 
+                                      ? 'bg-[#fff8e8] text-[#b8860b]'
+                                      : status === 'confirmed'
+                                      ? 'bg-[#e8f5e9] text-[#2e7d32]'
+                                      : 'bg-[#fce4ec] text-[#c2185b]'
+                                  }`}>
+                                    {status === 'confirmed' ? 'Confirmed' : 
+                                     status === 'cancelled' ? 'Cancelled' : 
                                      'Pending Confirmation'}
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="appointment-details-item">
-                                <div className="appointment-type">
-                                  <strong>Type:</strong> {getTypeName(appointment.type)}
+                              <div className="pt-3 border-t border-border">
+                                <div className="text-text-dark mb-2">
+                                  <strong className="text-text-dark mr-2">Type:</strong> {getTypeName(appointment.type)}
                                 </div>
                                 {appointment.notes && (
-                                  <div className="appointment-notes-item">
-                                    <strong>Notes:</strong> {appointment.notes}
+                                  <div className="text-text-light italic text-sm">
+                                    <strong className="text-text-dark not-italic mr-2">Notes:</strong> {appointment.notes}
                                   </div>
                                 )}
                               </div>
@@ -961,11 +1023,11 @@ function Admin() {
                 </div>
 
                 {selectedAppointment && (
-                  <div className="appointment-detail-view">
-                    <div className="appointment-detail-header">
-                      <h3>Appointment Details</h3>
+                  <div className="mt-8 p-6 bg-bg-light rounded-xl border-2 border-border">
+                    <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-border">
+                      <h3 className="text-text-dark text-2xl md:text-xl m-0">Appointment Details</h3>
                       <button
-                        className="close-detail-button"
+                        className="py-2 px-4 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border"
                         onClick={() => {
                           setSelectedAppointment(null)
                           setShowRescheduleForm(false)
@@ -976,39 +1038,45 @@ function Admin() {
                       </button>
                     </div>
 
-                    <div className="appointment-detail-content">
-                      <div className="detail-section">
-                        <h4>Appointment Information</h4>
-                        <div className="detail-row">
-                          <span className="detail-label">Date:</span>
-                          <span className="detail-value">{formatDate(selectedAppointment.date)}</span>
+                    <div className="flex flex-col gap-6">
+                      <div className="mb-6 pb-6 border-b-2 border-border">
+                        <h4 className="text-text-dark text-lg md:text-base mb-4">Appointment Information</h4>
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                          <span className="font-semibold text-text-dark text-sm">Date:</span>
+                          <span className="text-text-dark">{formatDate(selectedAppointment.date)}</span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Time:</span>
-                          <span className="detail-value">{formatTime(selectedAppointment.time)}</span>
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                          <span className="font-semibold text-text-dark text-sm">Time:</span>
+                          <span className="text-text-dark">{formatTime(selectedAppointment.time)}</span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Duration:</span>
-                          <span className="detail-value">{selectedAppointment.duration} minutes</span>
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                          <span className="font-semibold text-text-dark text-sm">Duration:</span>
+                          <span className="text-text-dark">{selectedAppointment.duration} minutes</span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Type:</span>
-                          <span className="detail-value">{getTypeName(selectedAppointment.type)}</span>
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                          <span className="font-semibold text-text-dark text-sm">Type:</span>
+                          <span className="text-text-dark">{getTypeName(selectedAppointment.type)}</span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Status:</span>
-                          <span className={`detail-value status-badge status-${selectedAppointment.status || 'pending'}`}>
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                          <span className="font-semibold text-text-dark text-sm">Status:</span>
+                          <span className={`py-2 px-4 rounded-full text-sm font-semibold inline-block ${
+                            (selectedAppointment.status || 'pending') === 'pending' 
+                              ? 'bg-[#fff8e8] text-[#b8860b]'
+                              : (selectedAppointment.status || 'pending') === 'confirmed'
+                              ? 'bg-[#e8f5e9] text-[#2e7d32]'
+                              : 'bg-[#fce4ec] text-[#c2185b]'
+                          }`}>
                             {selectedAppointment.status === 'confirmed' ? 'Confirmed' : 
                              selectedAppointment.status === 'cancelled' ? 'Cancelled' : 
                              'Pending Confirmation'}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Client Email:</span>
-                          <span className="detail-value">
+                        <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4 items-center">
+                          <span className="font-semibold text-text-dark text-sm">Client Email:</span>
+                          <span className="text-text-dark flex items-center gap-2 flex-wrap">
                             {selectedAppointment.clientEmail}
                             <button
-                              className="email-client-button"
+                              className="py-1.5 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom"
                               onClick={() => {
                                 const subject = `Clearview Counselling - Appointment ${selectedAppointment.status === 'confirmed' ? 'Confirmation' : 'Update'}`
                                 const body = `Dear ${selectedAppointment.clientName},\n\n` +
@@ -1029,33 +1097,33 @@ function Admin() {
                           </span>
                         </div>
                         {selectedAppointment.notes && (
-                          <div className="detail-row">
-                            <span className="detail-label">Notes:</span>
-                            <span className="detail-value">{selectedAppointment.notes}</span>
+                          <div className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4 mb-4">
+                            <span className="font-semibold text-text-dark text-sm">Notes:</span>
+                            <span className="text-text-dark">{selectedAppointment.notes}</span>
                           </div>
                         )}
                       </div>
 
                       {clientQuestionnaireData && (
-                        <div className="detail-section">
-                          <h4>Intake Questionnaire</h4>
-                          <div className="questionnaire-data">
+                        <div className="mb-6 pb-6 border-b-2 border-border">
+                          <h4 className="text-text-dark text-lg md:text-base mb-4">Intake Questionnaire</h4>
+                          <div className="space-y-3">
                             {Object.entries(clientQuestionnaireData).map(([key, value]) => (
-                              <div key={key} className="questionnaire-item">
-                                <span className="questionnaire-label">
+                              <div key={key} className="grid grid-cols-[200px_1fr] md:grid-cols-1 gap-4">
+                                <span className="font-semibold text-text-dark text-sm">
                                   {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                                 </span>
-                                <span className="questionnaire-value">{String(value)}</span>
+                                <span className="text-text-dark">{String(value)}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      <div className="detail-actions">
+                      <div className="pt-6 border-t-2 border-border">
                         {!showRescheduleForm ? (
                           <button
-                            className="reschedule-button"
+                            className="py-3 px-6 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom"
                             onClick={() => {
                               setShowRescheduleForm(true)
                               const dateStr = selectedAppointment.date.toISOString().split('T')[0]
@@ -1066,11 +1134,11 @@ function Admin() {
                             Reschedule Appointment
                           </button>
                         ) : (
-                          <div className="reschedule-form-container">
-                            <h4>Reschedule Appointment</h4>
-                            <form onSubmit={handleReschedule} className="reschedule-form">
-                              <div className="form-group">
-                                <label htmlFor="rescheduleDate">New Date *</label>
+                          <div className="mt-6 p-6 bg-white rounded-xl border-2 border-border">
+                            <h4 className="text-text-dark text-lg md:text-base mb-4 mt-0">Reschedule Appointment</h4>
+                            <form onSubmit={handleReschedule} className="flex flex-col gap-6">
+                              <div className="mb-6">
+                                <label htmlFor="rescheduleDate" className="block font-semibold text-text-dark mb-2 text-sm">New Date *</label>
                                 <input
                                   type="date"
                                   id="rescheduleDate"
@@ -1078,16 +1146,18 @@ function Admin() {
                                   onChange={(e) => setRescheduleDate(e.target.value)}
                                   min={getMinDate()}
                                   required
+                                  className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                                 />
                               </div>
 
-                              <div className="form-group">
-                                <label htmlFor="rescheduleTime">New Time *</label>
+                              <div className="mb-6">
+                                <label htmlFor="rescheduleTime" className="block font-semibold text-text-dark mb-2 text-sm">New Time *</label>
                                 <select
                                   id="rescheduleTime"
                                   value={rescheduleTime}
                                   onChange={(e) => setRescheduleTime(e.target.value)}
                                   required
+                                  className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                                 >
                                   <option value="">Select a time</option>
                                   {timeSlots.map(slot => (
@@ -1096,10 +1166,10 @@ function Admin() {
                                 </select>
                               </div>
 
-                              <div className="form-actions">
+                              <div className="flex gap-4 justify-end mt-2 md:flex-col">
                                 <button
                                   type="button"
-                                  className="cancel-reschedule-button"
+                                  className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
                                   onClick={() => {
                                     setShowRescheduleForm(false)
                                     setRescheduleDate('')
@@ -1110,7 +1180,7 @@ function Admin() {
                                 </button>
                                 <button
                                   type="submit"
-                                  className="submit-reschedule-button"
+                                  className="py-3 px-6 bg-gradient-to-r from-[#f0c97a] to-[#e89f6f] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                                   disabled={rescheduleLoading}
                                 >
                                   {rescheduleLoading ? 'Rescheduling...' : 'Reschedule'}
@@ -1124,11 +1194,11 @@ function Admin() {
                   </div>
                 )}
 
-                <div className="details-section">
-                  <div className="section-header">
-                    <h3>Send Message</h3>
+                <div className="mt-8 pb-6 border-b-2 border-border">
+                  <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+                    <h3 className="text-text-dark text-xl md:text-lg mb-0">Send Message</h3>
                     <button
-                      className="send-message-btn"
+                      className="py-2 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom text-sm md:w-full"
                       onClick={() => setShowMessageForm(!showMessageForm)}
                     >
                       {showMessageForm ? 'Cancel' : '+ Send Message'}
@@ -1136,10 +1206,10 @@ function Admin() {
                   </div>
 
                   {showMessageForm && (
-                    <div className="message-form-container">
-                      <form onSubmit={handleSendMessage} className="message-form">
-                        <div className="form-group">
-                          <label htmlFor="messageSubject">Subject *</label>
+                    <div className="mt-6 p-6 bg-bg-light rounded-xl border-2 border-border">
+                      <form onSubmit={handleSendMessage} className="flex flex-col gap-6">
+                        <div className="mb-6">
+                          <label htmlFor="messageSubject" className="block font-semibold text-text-dark mb-2 text-sm">Subject *</label>
                           <input
                             type="text"
                             id="messageSubject"
@@ -1147,11 +1217,12 @@ function Admin() {
                             onChange={(e) => setMessageSubject(e.target.value)}
                             placeholder="Message subject..."
                             required
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           />
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="messageContent">Message *</label>
+                        <div className="mb-6">
+                          <label htmlFor="messageContent" className="block font-semibold text-text-dark mb-2 text-sm">Message *</label>
                           <textarea
                             id="messageContent"
                             value={messageContent}
@@ -1159,13 +1230,14 @@ function Admin() {
                             rows={6}
                             placeholder="Type your message to the client..."
                             required
+                            className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit resize-y focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                           />
                         </div>
 
-                        <div className="form-actions">
+                        <div className="flex gap-4 justify-end mt-2 md:flex-col">
                           <button
                             type="button"
-                            className="cancel-message-btn"
+                            className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-border md:w-full"
                             onClick={() => {
                               setShowMessageForm(false)
                               setMessageSubject('')
@@ -1176,7 +1248,7 @@ function Admin() {
                           </button>
                           <button
                             type="submit"
-                            className="send-message-submit-btn"
+                            className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
                             disabled={sendingMessage}
                           >
                             {sendingMessage ? 'Sending...' : 'Send Message'}
@@ -1188,190 +1260,293 @@ function Admin() {
                 </div>
               </div>
             ) : (
-              <div className="no-selection">
+              <div className="text-center py-16 text-text-light">
                 <p>Select a client from the sidebar to view their details</p>
               </div>
             )}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'calendar' && (
-        <div className="admin-content">
-          <div className="admin-main-full">
+        <div className="max-w-[1400px] mx-auto px-8 py-6">
+          <div className="w-full bg-gradient-to-br from-white via-sky/10 to-nature-green/10 p-8 rounded-2xl shadow-custom-lg border border-border">
             <AdminCalendar clients={clients} />
           </div>
         </div>
       )}
 
       {activeTab === 'messages' && (
-        <div className="admin-content">
-          <div className="admin-main-full">
-            <div className="admin-messages-container">
-              <h2>Messages from Users</h2>
-              {loadingMessages ? (
-                <p className="loading-messages">Loading messages...</p>
-              ) : adminMessages.length === 0 ? (
-                <p className="no-messages">No messages from users yet</p>
-              ) : (
-                <div className="admin-messages-list">
-                  {adminMessages.map(msg => (
-                    <div
-                      key={msg.id}
-                      className={`admin-message-item ${!msg.read ? 'unread' : ''} ${selectedAdminMessage?.id === msg.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedAdminMessage(msg)}
-                    >
-                      <div className="admin-message-header">
-                        <div>
-                          <div className="admin-message-from">{msg.fromUserName}</div>
-                          <div className="admin-message-subject">{msg.subject}</div>
-                          <div className="admin-message-date">
-                            {msg.createdAt.toLocaleDateString()} {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <div className="max-w-[1600px] mx-auto px-8 py-6">
+          <div className="w-full bg-gradient-to-br from-white via-sky/20 to-nature-green/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col h-[calc(100vh-250px)] max-h-[800px] border border-border">
+            <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-primary/15 via-sky/10 to-nature-green/10">
+              <h2 className="text-text-dark text-2xl font-semibold">Messages from Users</h2>
+            </div>
+            {loadingMessages ? (
+              <div className="flex-1 flex items-center justify-center bg-white/50">
+                <p className="text-text-light">Loading messages...</p>
+              </div>
+            ) : adminMessages.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center bg-white/50">
+                <p className="text-text-light">No messages from users yet</p>
+              </div>
+            ) : (
+              <div className="flex flex-1 overflow-hidden md:flex-row flex-col">
+                {/* Message List - Left Sidebar */}
+                <div className="md:w-[380px] w-full border-r border-b md:border-b-0 border-border bg-gradient-to-b from-sky/10 to-white flex flex-col overflow-hidden">
+                  <div className="p-4 border-b border-border bg-gradient-to-r from-primary/20 to-sky/10">
+                    <div className="text-sm font-medium text-text-dark">{adminMessages.length} {adminMessages.length === 1 ? 'message' : 'messages'}</div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto bg-white/60">
+                    {adminMessages.map(msg => (
+                      <div
+                        key={msg.id}
+                        className={`p-4 border-b border-border/60 cursor-pointer transition-colors duration-200 ${
+                          selectedAdminMessage?.id === msg.id 
+                            ? 'bg-gradient-to-r from-primary/15 to-sky/10 border-l-4 border-l-primary shadow-sm' 
+                            : 'hover:bg-gradient-to-r hover:from-sky/10 hover:to-nature-green/5'
+                        } ${
+                          !msg.read ? 'bg-gradient-to-r from-sky/20 to-white' : 'bg-white/80'
+                        }`}
+                        onClick={() => {
+                          setSelectedAdminMessage(msg)
+                          if (!msg.read) {
+                            updateDoc(doc(db, 'messages', msg.id), {
+                              read: true,
+                              readAt: Timestamp.now()
+                            }).then(() => {
+                              loadAdminMessages()
+                            })
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className={`text-sm font-semibold truncate ${!msg.read ? 'text-text-dark' : 'text-text-dark/80'}`}>
+                                {msg.fromUserName}
+                              </div>
+                              {!msg.read && (
+                                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-2" />
+                              )}
+                            </div>
+                            <div className={`text-sm mb-1 truncate ${!msg.read ? 'font-medium text-text-dark' : 'text-text-light'}`}>
+                              {msg.subject}
+                            </div>
+                            <div className="text-xs text-text-light">
+                              {msg.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                           </div>
                         </div>
-                        {!msg.read && <div className="unread-indicator" />}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {selectedAdminMessage && (
-                <div className="admin-message-view">
-                  <h3>Message from {selectedAdminMessage.fromUserName}</h3>
-                  <div className="admin-message-view-subject">
-                    <strong>Subject:</strong> {selectedAdminMessage.subject}
-                  </div>
-                  <div className="admin-message-view-content">
-                    {selectedAdminMessage.content.split('\n').map((line: string, i: number) => (
-                      <p key={i}>{line || '\u00A0'}</p>
                     ))}
                   </div>
-                  <button
-                    className="close-message-button"
-                    onClick={() => setSelectedAdminMessage(null)}
-                  >
-                    Close
-                  </button>
                 </div>
-              )}
-            </div>
+
+                {/* Message Display - Right Panel */}
+                <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-white via-bg-light to-sky/5">
+                  {selectedAdminMessage ? (
+                    <>
+                      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1 min-w-0">
+                            <button
+                              onClick={() => setSelectedAdminMessage(null)}
+                              className="md:hidden mb-3 text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1"
+                            >
+                              <span>←</span> Back to messages
+                            </button>
+                            <h3 className="text-lg md:text-xl font-semibold text-text-dark mb-2 break-words">{selectedAdminMessage.subject}</h3>
+                            <div className="text-xs md:text-sm text-text-light">
+                              <span className="font-medium text-text-dark">{selectedAdminMessage.fromUserName}</span>
+                              <span className="mx-2">•</span>
+                              <span className="break-words">{selectedAdminMessage.createdAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {selectedAdminMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-white/70">
+                        <div className="prose max-w-none bg-white/80 p-6 rounded-lg border border-border/50 shadow-sm">
+                          <div className="text-text-dark leading-relaxed whitespace-pre-wrap text-sm md:text-[15px]">
+                            {selectedAdminMessage.content.split('\n').map((line: string, i: number) => (
+                              <p key={i} className="mb-4 last:mb-0">{line || '\u00A0'}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center p-6 bg-white/50">
+                      <div className="text-center">
+                        <p className="text-text-light text-lg mb-2">Select a message to view</p>
+                        <p className="text-text-light text-sm">Choose a message from the list to read its contents</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {activeTab === 'contactMessages' && (
-        <div className="admin-content">
-          <div className="admin-main-full">
-            <div className="admin-contact-messages-container">
-              <h2>Contact Form Messages</h2>
-              {loadingContactMessages ? (
-                <p className="loading-messages">Loading messages...</p>
-              ) : contactMessages.length === 0 ? (
-                <p className="no-messages">No contact messages yet</p>
-              ) : (
-                <div className="admin-contact-messages-list">
-                  {contactMessages.map(msg => (
-                    <div
-                      key={msg.id}
-                      className={`admin-contact-message-item ${!msg.read ? 'unread' : ''} ${selectedContactMessage?.id === msg.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        setSelectedContactMessage(msg)
-                        // Mark as read when opened
-                        if (!msg.read) {
-                          updateDoc(doc(db, 'contactMessages', msg.id), {
-                            read: true,
-                            readAt: Timestamp.now()
-                          }).then(() => {
-                            loadContactMessages()
-                          })
-                        }
-                      }}
-                    >
-                      <div className="admin-contact-message-header">
-                        <div>
-                          <div className="admin-contact-message-from">{msg.name} ({msg.email})</div>
-                          <div className="admin-contact-message-subject">{msg.subject}</div>
-                          <div className="admin-contact-message-date">
-                            {msg.createdAt.toLocaleDateString()} {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <div className="max-w-[1600px] mx-auto px-8 py-6">
+          <div className="w-full bg-gradient-to-br from-white via-nature-green/10 to-earth/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col h-[calc(100vh-250px)] max-h-[800px] border border-border">
+            <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-nature-green/15 via-secondary/10 to-earth/10">
+              <h2 className="text-text-dark text-2xl font-semibold">Contact Form Messages</h2>
+            </div>
+            {loadingContactMessages ? (
+              <div className="flex-1 flex items-center justify-center bg-white/50">
+                <p className="text-text-light">Loading messages...</p>
+              </div>
+            ) : contactMessages.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center bg-white/50">
+                <p className="text-text-light">No contact messages yet</p>
+              </div>
+            ) : (
+              <div className="flex flex-1 overflow-hidden md:flex-row flex-col">
+                {/* Message List - Left Sidebar */}
+                <div className="md:w-[380px] w-full border-r border-b md:border-b-0 border-border bg-gradient-to-b from-nature-green/10 to-white flex flex-col overflow-hidden">
+                  <div className="p-4 border-b border-border bg-gradient-to-r from-nature-green/20 to-secondary/10">
+                    <div className="text-sm font-medium text-text-dark">{contactMessages.length} {contactMessages.length === 1 ? 'message' : 'messages'}</div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto bg-white/60">
+                    {contactMessages.map(msg => (
+                      <div
+                        key={msg.id}
+                        className={`p-4 border-b border-border/60 cursor-pointer transition-colors duration-200 ${
+                          selectedContactMessage?.id === msg.id 
+                            ? 'bg-gradient-to-r from-nature-green/15 to-secondary/10 border-l-4 border-l-nature-green shadow-sm' 
+                            : 'hover:bg-gradient-to-r hover:from-nature-green/10 hover:to-earth/5'
+                        } ${
+                          !msg.read ? 'bg-gradient-to-r from-nature-green/20 to-white' : 'bg-white/80'
+                        }`}
+                        onClick={() => {
+                          setSelectedContactMessage(msg)
+                          // Mark as read when opened
+                          if (!msg.read) {
+                            updateDoc(doc(db, 'contactMessages', msg.id), {
+                              read: true,
+                              readAt: Timestamp.now()
+                            }).then(() => {
+                              loadContactMessages()
+                            })
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className={`text-sm font-semibold truncate ${!msg.read ? 'text-text-dark' : 'text-text-dark/80'}`}>
+                                {msg.name}
+                              </div>
+                              {!msg.read && (
+                                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-2" />
+                              )}
+                            </div>
+                            <div className={`text-sm mb-1 truncate ${!msg.read ? 'font-medium text-text-dark' : 'text-text-light'}`}>
+                              {msg.subject}
+                            </div>
+                            <div className="text-xs text-text-light truncate">
+                              {msg.email}
+                            </div>
+                            <div className="text-xs text-text-light mt-1">
+                              {msg.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                           </div>
                         </div>
-                        {!msg.read && <div className="unread-indicator" />}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {selectedContactMessage && (
-                <div className="admin-contact-message-view">
-                  <div className="admin-contact-message-view-header">
-                    <h3>Message from {selectedContactMessage.name}</h3>
-                    <button
-                      className="close-message-button"
-                      onClick={() => setSelectedContactMessage(null)}
-                    >
-                      Close
-                    </button>
+                    ))}
                   </div>
-                  <div className="admin-contact-message-details">
-                    <div className="contact-message-detail-row">
-                      <span className="contact-message-detail-label">Name:</span>
-                      <span className="contact-message-detail-value">{selectedContactMessage.name}</span>
-                    </div>
-                    <div className="contact-message-detail-row">
-                      <span className="contact-message-detail-label">Email:</span>
-                      <span className="contact-message-detail-value">
-                        {selectedContactMessage.email}
+                </div>
+
+                {/* Message Display - Right Panel */}
+                <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-white via-bg-light to-nature-green/5">
+                  {selectedContactMessage ? (
+                    <>
+                      <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-nature-green/10 via-secondary/10 to-earth/10">
                         <button
-                          className="email-client-button"
-                          onClick={() => handleEmailClient(selectedContactMessage.email)}
-                          title="Send email"
+                          onClick={() => setSelectedContactMessage(null)}
+                          className="md:hidden mb-3 text-nature-green hover:text-nature-green/80 text-sm font-medium flex items-center gap-1"
                         >
-                          Email
+                          <span>←</span> Back to messages
                         </button>
-                      </span>
-                    </div>
-                    {selectedContactMessage.phone && (
-                      <div className="contact-message-detail-row">
-                        <span className="contact-message-detail-label">Phone:</span>
-                        <span className="contact-message-detail-value">{selectedContactMessage.phone}</span>
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg md:text-xl font-semibold text-text-dark mb-2 break-words">{selectedContactMessage.subject}</h3>
+                            <div className="text-xs md:text-sm text-text-light">
+                              <span className="font-medium text-text-dark">{selectedContactMessage.name}</span>
+                              <span className="mx-2">•</span>
+                              <span className="break-words">{selectedContactMessage.email}</span>
+                              <span className="mx-2">•</span>
+                              <span className="break-words">{selectedContactMessage.createdAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {selectedContactMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="contact-message-detail-row">
-                      <span className="contact-message-detail-label">Subject:</span>
-                      <span className="contact-message-detail-value">{selectedContactMessage.subject}</span>
-                    </div>
-                    <div className="contact-message-detail-row">
-                      <span className="contact-message-detail-label">Date:</span>
-                      <span className="contact-message-detail-value">
-                        {selectedContactMessage.createdAt.toLocaleDateString()} {selectedContactMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="contact-message-detail-row full-width">
-                      <span className="contact-message-detail-label">Message:</span>
-                      <div className="contact-message-content">
-                        {selectedContactMessage.message.split('\n').map((line: string, i: number) => (
-                          <p key={i}>{line || '\u00A0'}</p>
-                        ))}
+                      <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-white/70">
+                        <div className="prose max-w-none bg-white/80 p-6 rounded-lg border border-border/50 shadow-sm mb-6">
+                          <div className="text-text-dark leading-relaxed whitespace-pre-wrap text-sm md:text-[15px]">
+                            {selectedContactMessage.message.split('\n').map((line: string, i: number) => (
+                              <p key={i} className="mb-4 last:mb-0">{line || '\u00A0'}</p>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-r from-nature-green/10 to-secondary/10 p-6 rounded-lg border border-border/50 space-y-3">
+                          <div className="flex items-start gap-4">
+                            <span className="font-semibold text-text-dark text-sm min-w-[80px]">Name:</span>
+                            <span className="text-text-dark">{selectedContactMessage.name}</span>
+                          </div>
+                          <div className="flex items-start gap-4">
+                            <span className="font-semibold text-text-dark text-sm min-w-[80px]">Email:</span>
+                            <span className="text-text-dark flex items-center gap-2 flex-wrap">
+                              {selectedContactMessage.email}
+                              <button
+                                className="py-1.5 px-4 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom"
+                                onClick={() => handleEmailClient(selectedContactMessage.email)}
+                                title="Send email"
+                              >
+                                Email
+                              </button>
+                            </span>
+                          </div>
+                          {selectedContactMessage.phone && (
+                            <div className="flex items-start gap-4">
+                              <span className="font-semibold text-text-dark text-sm min-w-[80px]">Phone:</span>
+                              <span className="text-text-dark">{selectedContactMessage.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center p-6 bg-white/50">
+                      <div className="text-center">
+                        <p className="text-text-light text-lg mb-2">Select a message to view</p>
+                        <p className="text-text-light text-sm">Choose a message from the list to read its contents</p>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        type={confirmDialog.type}
-      />
+      {confirmDialog.isOpen && confirmDialog.onConfirm && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          type={confirmDialog.type}
+        />
+      )}
     </div>
   )
 }

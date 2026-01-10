@@ -98,7 +98,9 @@ This app is configured for Netlify deployment. To deploy:
 The `netlify.toml` file is already configured with:
 - Build command and publish directory
 - SPA redirect rules for React Router
-- Node.js version (18)
+- Security headers
+- Asset caching
+- Node.js version (20)
 
 ## Firebase Setup
 

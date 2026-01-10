@@ -1,0 +1,193 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Users collection - users can read and write their own document
+    match /users/{userId} {
+      // Users can always read their own document (needed for admin check)
+      // Admins can also read any user document
+      allow read: if isAuthenticated() && (
+        // User reading their own document
+        request.auth.uid == userId ||
+        // Admin reading any document (check if requesting user is admin)
+        // Note: This checks the requesting user's document, not the document being read
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+      
+      // Users can create their own document (for first-time sign-in)
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       request.resource.data.role == 'user' &&
+                       request.resource.data.email == request.auth.token.email;
+      
+      // Users can update their own document (but cannot promote themselves to admin)
+      allow update: if isAuthenticated() && request.auth.uid == userId && (
+        // Allow update if role is not being changed
+        !('role' in request.resource.data.diff(resource.data).affectedKeys()) ||
+        // Or if role is being changed but staying as 'user' (can't self-promote)
+        (request.resource.data.role == 'user' && resource.data.role == 'user')
+      );
+      
+      // Admins can update any user document (for promoting users to admin)
+      allow update: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Clients collection - users can write their own, admins can read all
+    match /clients/{clientId} {
+      // Users can read and write their own client document
+      allow read, create, update: if isAuthenticated() && 
+                                     request.auth.uid == clientId;
+      
+      // Admins can read all client documents
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Users cannot delete (only admins can if needed)
+      allow delete: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Appointments collection
+    match /appointments/{appointmentId} {
+      // Users can read their own appointments (works for both get and list queries)
+      // For queries, Firestore evaluates each document in the result against this rule
+      allow read: if isAuthenticated() && 
+                     resource.data.clientId == request.auth.uid;
+      
+      // Admins can read all appointments
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Admins can create appointments for any client
+      allow create: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Users can create appointments for themselves
+      allow create: if isAuthenticated() && 
+                       request.resource.data.clientId == request.auth.uid &&
+                       // Ensure user is setting their own clientId
+                       request.resource.data.clientName is string &&
+                       request.resource.data.clientEmail is string &&
+                       request.resource.data.date is timestamp &&
+                       request.resource.data.time is string &&
+                       request.resource.data.duration is int &&
+                       request.resource.data.type in ['discovery', 'mentorship', 'zoom'] &&
+                       (!('status' in request.resource.data) || request.resource.data.status == 'pending');
+      
+      // Users can update their own appointments (to confirm/cancel)
+      // Allow if user owns the appointment and only status-related fields are changed
+      allow update: if isAuthenticated() && 
+                       resource.data.clientId == request.auth.uid &&
+                       // Ensure critical booking fields are not changed
+                       request.resource.data.clientId == resource.data.clientId &&
+                       request.resource.data.date == resource.data.date &&
+                       request.resource.data.time == resource.data.time &&
+                       request.resource.data.duration == resource.data.duration &&
+                       request.resource.data.type == resource.data.type;
+      
+      // Admins can update any appointment
+      allow update: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can delete appointments
+      allow delete: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      // Users can read messages sent to them
+      allow read: if isAuthenticated() && 
+                     resource.data.toUserId == request.auth.uid;
+      
+      // Admins can read all messages (both sent and received)
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Admins can create messages to any user
+      allow create: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+                       request.resource.data.fromUserId == request.auth.uid &&
+                       request.resource.data.fromUserRole == 'admin' &&
+                       request.resource.data.fromUserName is string &&
+                       request.resource.data.toUserId is string &&
+                       request.resource.data.subject is string &&
+                       request.resource.data.content is string &&
+                       request.resource.data.read == false &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Users can create messages (replies to admins)
+      allow create: if isAuthenticated() && 
+                       request.resource.data.fromUserId == request.auth.uid &&
+                       request.resource.data.fromUserRole == 'user' &&
+                       request.resource.data.fromUserName is string &&
+                       request.resource.data.toUserId is string &&
+                       request.resource.data.subject is string &&
+                       request.resource.data.content is string &&
+                       request.resource.data.read == false &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Users can update their own received messages (mark as read)
+      allow update: if isAuthenticated() && 
+                       resource.data.toUserId == request.auth.uid &&
+                       request.resource.data.read == true &&
+                       // Don't allow changing other fields
+                       request.resource.data.fromUserId == resource.data.fromUserId &&
+                       request.resource.data.toUserId == resource.data.toUserId &&
+                       request.resource.data.subject == resource.data.subject &&
+                       request.resource.data.content == resource.data.content;
+      
+      // Admins can update any message
+      allow update: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can delete messages
+      allow delete: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Contact Messages collection (from Contact Us form)
+    match /contactMessages/{messageId} {
+      // Anyone can create a contact message (even unauthenticated users)
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.email is string &&
+                       request.resource.data.subject is string &&
+                       request.resource.data.message is string &&
+                       request.resource.data.read == false &&
+                       request.resource.data.createdAt is timestamp &&
+                       (!('phone' in request.resource.data) || request.resource.data.phone is string);
+      
+      // Only admins can read contact messages
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can update contact messages (to mark as read, etc.)
+      allow update: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can delete contact messages
+      allow delete: if isAuthenticated() && 
+                       exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

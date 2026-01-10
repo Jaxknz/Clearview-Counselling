@@ -1,0 +1,65 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Nature-inspired color palette */
+  --primary-color: #5BA3D0; /* Soft sky blue - like clear skies */
+  --primary-dark: #4A8FBA;
+  --secondary-color: #8FB88F; /* Sage green - like fresh leaves */
+  --accent-color: #6AB77B; /* Nature green - vibrant growth */
+  --nature-green: #7FA37F; /* Deeper sage */
+  --earth-brown: #B89F7A; /* Warm earth tone */
+  --sky-blue: #AED6F1; /* Light sky blue */
+  --forest-green: #6B8E6B; /* Forest depth */
+  
+  /* Text and backgrounds */
+  --text-dark: #3D4A3D; /* Dark sage - nature-inspired dark */
+  --text-light: #6B7A6B; /* Muted green-gray */
+  --bg-light: #F5F8F5; /* Very light sage - like morning mist */
+  --bg-white: #FFFFFF;
+  --border-color: #D4E4D4; /* Soft sage border */
+  --shadow: 0 2px 8px rgba(91, 163, 208, 0.12);
+  --shadow-lg: 0 4px 16px rgba(91, 163, 208, 0.18);
+  
+  /* Nature gradient */
+  --nature-gradient: linear-gradient(135deg, #5BA3D0 0%, #8FB88F 50%, #6AB77B 100%);
+  --sky-gradient: linear-gradient(135deg, #AED6F1 0%, #5BA3D0 100%);
+  --earth-gradient: linear-gradient(135deg, #8FB88F 0%, #7FA37F 100%);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-light);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(175, 214, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(143, 184, 143, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(106, 183, 123, 0.08) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  outline: none;
+}
+

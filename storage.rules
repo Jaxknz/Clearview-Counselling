@@ -1,0 +1,30 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Profile photos - users can upload/update/delete their own photos
+    match /profile-photos/{userId}/{photoId} {
+      // Users can read their own photos
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Users can create/update their own photos
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == userId &&
+                      // Only allow image files
+                      request.resource.contentType.matches('image/.*') &&
+                      // Limit file size to 5MB
+                      request.resource.size < 5 * 1024 * 1024;
+      
+      // Users can delete their own photos
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Admins can read/delete any profile photos
+      allow read, delete: if isAuthenticated();
+    }
+  }
+}
+

@@ -570,9 +570,9 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
   return (
     <div className="bg-white p-8 md:p-4 rounded-xl shadow-custom">
         <div className="flex flex-col gap-6 mb-8">
-        <div className="flex gap-4 border-b-2 border-border pb-0 md:flex-wrap">
+        <div className="flex gap-2 sm:gap-4 border-b-2 border-border pb-0 overflow-x-auto">
           <button
-            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+            className={`py-2 sm:py-3 px-3 sm:px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-sm sm:text-base relative bottom-[-2px] whitespace-nowrap flex-shrink-0 ${
               view === 'calendar' 
                 ? 'text-primary border-b-primary' 
                 : 'border-b-transparent hover:text-primary hover:bg-primary/5'
@@ -587,7 +587,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
             Calendar View
           </button>
           <button
-            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+            className={`py-2 sm:py-3 px-3 sm:px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-sm sm:text-base relative bottom-[-2px] whitespace-nowrap flex-shrink-0 ${
               view === 'pending' 
                 ? 'text-primary border-b-primary' 
                 : 'border-b-transparent hover:text-primary hover:bg-primary/5'
@@ -599,10 +599,10 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
               setSelectedDate(null)
             }}
           >
-            Pending Appointments ({pendingAppointments.length})
+            Pending ({pendingAppointments.length})
           </button>
           <button
-            className={`py-3 px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-base relative bottom-[-2px] ${
+            className={`py-2 sm:py-3 px-3 sm:px-6 bg-none border-none border-b-[3px] font-semibold text-text-light cursor-pointer transition-all duration-300 text-sm sm:text-base relative bottom-[-2px] whitespace-nowrap flex-shrink-0 ${
               view === 'all' 
                 ? 'text-primary border-b-primary' 
                 : 'border-b-transparent hover:text-primary hover:bg-primary/5'
@@ -614,15 +614,15 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
               setSelectedDate(null)
             }}
           >
-            All Appointments ({allAppointments.length})
+            All ({allAppointments.length})
           </button>
         </div>
         {view === 'calendar' && (
-          <div className="flex justify-between items-center md:flex-col md:gap-4 md:items-stretch">
-            <div className="flex items-center gap-4 md:justify-between">
-              <button onClick={prevMonth} className="py-2 px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary">Previous</button>
-              <h2 className="m-0 text-2xl md:text-xl text-text-dark min-w-[200px] text-center">{monthName}</h2>
-              <button onClick={nextMonth} className="py-2 px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary">Next</button>
+          <div className="flex justify-between items-center flex-col sm:flex-row gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-start">
+              <button onClick={prevMonth} className="py-2 px-3 sm:px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary text-sm sm:text-base">Previous</button>
+              <h2 className="m-0 text-lg sm:text-xl md:text-2xl text-text-dark text-center flex-1 sm:flex-initial sm:min-w-[200px]">{monthName}</h2>
+              <button onClick={nextMonth} className="py-2 px-3 sm:px-4 bg-bg-light border-2 border-border rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary text-sm sm:text-base">Next</button>
             </div>
             <button 
               onClick={() => {
@@ -630,7 +630,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                 setShowDayBreakdown(true)
                 setShowBookingForm(false)
               }}
-              className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg"
+              className="py-2 sm:py-3 px-4 sm:px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg text-sm sm:text-base w-full sm:w-auto"
             >
               + New Appointment
             </button>
@@ -1018,13 +1018,13 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
 
       {view === 'calendar' && !loadingAppointments && (
         <>
-        <div className="mb-8">
-        <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="mb-8 overflow-x-auto">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 min-w-[600px]">
           {dayNames.map(day => (
-            <div key={day} className="text-center font-semibold text-text-dark py-2 text-sm">{day}</div>
+            <div key={day} className="text-center font-semibold text-text-dark py-2 text-xs sm:text-sm">{day}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 min-w-[600px]">
           {days.map((date, index) => {
             const dayAppointments = getAppointmentsForDate(date)
             const isToday = date && 
@@ -1034,7 +1034,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
             return (
               <div
                 key={index}
-                className={`min-h-[100px] border-2 rounded-lg p-2 cursor-pointer transition-all duration-300 bg-white ${
+                className={`min-h-[80px] sm:min-h-[100px] border-2 rounded-lg p-1 sm:p-2 cursor-pointer transition-all duration-300 bg-white ${
                   !date 
                     ? 'border-transparent cursor-default' 
                     : isToday 
@@ -1047,12 +1047,12 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
               >
                 {date && (
                   <>
-                    <div className="font-semibold text-text-dark mb-2 text-sm">{date.getDate()}</div>
-                    <div className="flex flex-col gap-1">
+                    <div className="font-semibold text-text-dark mb-1 sm:mb-2 text-xs sm:text-sm">{date.getDate()}</div>
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
                       {dayAppointments.slice(0, 2).map(apt => (
                         <div 
                           key={apt.id} 
-                          className={`text-xs py-1 px-2 rounded text-white whitespace-nowrap overflow-hidden text-ellipsis ${
+                          className={`text-[10px] sm:text-xs py-0.5 sm:py-1 px-1 sm:px-2 rounded text-white whitespace-nowrap overflow-hidden text-ellipsis ${
                             apt.type === 'discovery' 
                               ? 'bg-accent' 
                               : apt.type === 'mentorship' 
@@ -1065,7 +1065,7 @@ function AdminCalendar({ clients }: AdminCalendarProps) {
                         </div>
                       ))}
                       {dayAppointments.length > 2 && (
-                        <div className="text-xs text-text-light italic">
+                        <div className="text-[10px] sm:text-xs text-text-light italic">
                           +{dayAppointments.length - 2} more
                         </div>
                       )}

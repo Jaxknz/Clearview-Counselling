@@ -169,37 +169,38 @@ function Messages() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-nature-gradient bg-clip-text text-transparent">Messages</h1>
-        <p className="text-lg text-text-light">View and respond to messages from admins</p>
+    <div className="min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 bg-bg-light">
+      <div className="text-center mb-6 sm:mb-8 px-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 bg-nature-gradient bg-clip-text text-transparent">Messages</h1>
+        <p className="text-base sm:text-lg text-text-light">View and respond to messages from admins</p>
         {unreadCount > 0 && (
-          <div className="inline-block mt-4 py-2 px-4 bg-[#f5d89c] text-[#8b6914] rounded-full font-semibold text-sm">
+          <div className="inline-block mt-3 sm:mt-4 py-2 px-3 sm:px-4 bg-[#f5d89c] text-[#8b6914] rounded-full font-semibold text-xs sm:text-sm">
             {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
           </div>
         )}
       </div>
 
-      <div className="max-w-[1600px] mx-auto bg-gradient-to-br from-white via-primary/5 to-sky/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col min-h-[500px] h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[calc(100vh-250px)] max-h-[800px] border border-border">
-        <div className="px-6 py-4 border-b border-border bg-gradient-to-r from-primary/15 via-sky/10 to-nature-green/10">
-          <h2 className="text-text-dark text-2xl font-semibold">Inbox</h2>
-        </div>
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center bg-white/50">
-            <p className="text-text-light">Loading messages...</p>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="bg-gradient-to-br from-white via-primary/5 to-sky/10 rounded-2xl shadow-custom-lg overflow-hidden flex flex-col min-h-[500px] h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)] md:h-[calc(100vh-220px)] lg:h-[calc(100vh-250px)] max-h-[800px] border border-border">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-gradient-to-r from-primary/15 via-sky/10 to-nature-green/10">
+            <h2 className="text-text-dark text-xl sm:text-2xl font-semibold">Inbox</h2>
           </div>
-        ) : messages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center bg-white/50">
-            <p className="text-text-light">No messages yet</p>
-          </div>
-        ) : (
-          <div className="flex flex-1 overflow-hidden md:flex-row flex-col">
-            {/* Message List - Left Sidebar */}
-            <div className="md:w-[380px] w-full border-r border-b md:border-b-0 border-border bg-gradient-to-b from-sky/10 to-white flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-border bg-gradient-to-r from-primary/20 to-sky/10">
-                <div className="text-sm font-medium text-text-dark">{messages.length} {messages.length === 1 ? 'message' : 'messages'}</div>
-              </div>
-              <div className="flex-1 overflow-y-auto bg-white/60">
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center bg-white/50">
+              <p className="text-text-light text-sm sm:text-base">Loading messages...</p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center bg-white/50">
+              <p className="text-text-light text-sm sm:text-base">No messages yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+              {/* Message List - Left Sidebar */}
+              <div className="lg:w-[380px] w-full border-r-0 lg:border-r border-b lg:border-b-0 border-border bg-gradient-to-b from-sky/10 to-white flex flex-col overflow-hidden">
+                <div className="p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary/20 to-sky/10">
+                  <div className="text-xs sm:text-sm font-medium text-text-dark">{messages.length} {messages.length === 1 ? 'message' : 'messages'}</div>
+                </div>
+                <div className="flex-1 overflow-y-auto bg-white/60">
                 {messages.map(msg => (
                   <div
                     key={msg.id}
@@ -236,28 +237,28 @@ function Messages() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
-            </div>
 
             {/* Message Display - Right Panel */}
             <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-white via-bg-light to-sky/5">
               {selectedMessage ? (
                 <>
-                  <div className="p-4 md:p-6 border-b border-border bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10">
+                  <div className="p-4 sm:p-6 border-b border-border bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10">
                     <button
                       onClick={() => setSelectedMessage(null)}
-                      className="md:hidden mb-3 text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1"
+                      className="lg:hidden mb-3 text-primary hover:text-primary/80 text-xs sm:text-sm font-medium flex items-center gap-1"
                     >
                       <span>←</span> Back to messages
                     </button>
-                    <div className="flex items-start gap-4 mb-4">
+                    <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <Avatar
                         displayName={selectedMessage.fromUserName}
-                        size={48}
+                        size={40}
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg md:text-xl font-semibold text-text-dark mb-2 break-words">{selectedMessage.subject}</h3>
-                        <div className="text-xs md:text-sm text-text-light">
+                        <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-text-dark mb-2 break-words">{selectedMessage.subject}</h3>
+                        <div className="text-xs sm:text-sm text-text-light">
                           <span className="font-medium text-text-dark">{selectedMessage.fromUserName}</span>
                           <span className="mx-2">•</span>
                           <span className="break-words">{selectedMessage.createdAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {selectedMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -265,9 +266,9 @@ function Messages() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-white/70">
-                    <div className="prose max-w-none bg-white/80 p-6 rounded-lg border border-border/50 shadow-sm">
-                      <div className="text-text-dark leading-relaxed whitespace-pre-wrap text-sm md:text-[15px]">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white/70">
+                    <div className="prose max-w-none bg-white/80 p-4 sm:p-6 rounded-lg border border-border/50 shadow-sm">
+                      <div className="text-text-dark leading-relaxed whitespace-pre-wrap text-xs sm:text-sm lg:text-[15px]">
                         {selectedMessage.content.split('\n').map((line, i) => (
                           <p key={i} className="mb-4 last:mb-0">{line || '\u00A0'}</p>
                         ))}
@@ -301,9 +302,9 @@ function Messages() {
                                 {successMessage.text}
                               </div>
                             )}
-                            <div className="flex gap-4 justify-end md:flex-col">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
                               <button
-                                className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:border-text-dark hover:bg-text-light hover:text-white md:w-full"
+                                className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold text-sm sm:text-base cursor-pointer transition-all duration-300 hover:border-text-dark hover:bg-text-light hover:text-white"
                                 onClick={() => {
                                   setReplying(false)
                                   setReplyContent('')
@@ -312,7 +313,7 @@ function Messages() {
                                 Cancel
                               </button>
                               <button
-                                className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
+                                className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm sm:text-base cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                                 onClick={handleReply}
                                 disabled={sending || !replyContent.trim()}
                               >
@@ -335,9 +336,10 @@ function Messages() {
                   )}
                 </div>
               </div>
-            )}
-          </div>
+          )}
         </div>
+      </div>
+    </div>
   )
 }
 

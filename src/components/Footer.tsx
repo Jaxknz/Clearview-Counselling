@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 
 function Footer() {
   return (
-    <footer className="bg-gradient-to-b from-forest to-[#5A6B5A] text-white mt-auto py-12 px-8 md:py-8 md:px-4 relative overflow-hidden before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.03)_0%,transparent_50%)] before:pointer-events-none">
+    <footer className="bg-gradient-to-b from-forest to-[#5A6B5A] text-white mt-auto py-8 sm:py-10 lg:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.05)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.03)_0%,transparent_50%)] before:pointer-events-none">
       <div className="relative z-10 max-w-[1200px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
           <div>
             <h3 className="text-2xl md:text-xl mb-4 text-white font-bold">Clearview Counselling</h3>
             <p className="text-white/80 leading-relaxed">Professional counselling services to help you navigate life's challenges.</p>

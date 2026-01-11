@@ -123,15 +123,15 @@ function Payment() {
   const planName = getPlanName(paymentData.selectedPlan)
 
   return (
-    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">Complete Your Registration</h1>
-        <p className="text-lg text-text-light">Review your selection and choose a payment method</p>
+    <div className="min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 bg-bg-light">
+      <div className="text-center mb-6 sm:mb-8 px-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">Complete Your Registration</h1>
+        <p className="text-base sm:text-lg text-text-light">Review your selection and choose a payment method</p>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-[1fr_1.5fr] lg:grid-cols-1 gap-8 md:gap-6">
-        <div className="bg-white p-8 md:p-6 rounded-2xl shadow-custom-lg">
-          <h2 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">Order Summary</h2>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6 sm:gap-8">
+        <div className="bg-white p-6 sm:p-8 lg:p-8 rounded-2xl shadow-custom-lg">
+          <h2 className="text-text-dark text-xl sm:text-2xl lg:text-2xl mb-4 sm:mb-6 pb-3 sm:pb-4 border-b-2 border-border">Order Summary</h2>
           <div className="space-y-4 mb-6">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-text-dark text-sm">Plan:</span>
@@ -157,8 +157,8 @@ function Payment() {
         </div>
 
         {price === 0 ? (
-          <div className="bg-white p-10 md:p-8 rounded-2xl shadow-custom-lg text-center">
-            <h3 className="text-text-dark text-2xl md:text-xl mb-4 mt-0">Free Discovery Call</h3>
+          <div className="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl shadow-custom-lg text-center">
+            <h3 className="text-text-dark text-xl sm:text-2xl lg:text-2xl mb-4 mt-0">Free Discovery Call</h3>
             <p className="text-text-light mb-6 text-lg">No payment required. Click below to complete your registration.</p>
             <button 
               onClick={handlePaymentSuccess}
@@ -168,10 +168,10 @@ function Payment() {
             </button>
           </div>
         ) : (
-          <div className="bg-white p-10 md:p-8 rounded-2xl shadow-custom-lg">
-            <h2 className="text-text-dark text-2xl md:text-xl mb-6 pb-4 border-b-2 border-border">Select Payment Method</h2>
+          <div className="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl shadow-custom-lg">
+            <h2 className="text-text-dark text-xl sm:text-2xl lg:text-2xl mb-4 sm:mb-6 pb-3 sm:pb-4 border-b-2 border-border">Select Payment Method</h2>
             
-            <div className="flex gap-4 mb-8 border-b-2 border-border md:flex-col">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:mb-8 border-b-2 border-border">
               <button
                 className={`py-4 px-6 bg-none border-none border-b-4 font-semibold text-base cursor-pointer transition-all duration-300 whitespace-nowrap relative bottom-[-2px] ${
                   paymentMethod === 'paypal' 
@@ -269,8 +269,8 @@ function Payment() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 md:grid-cols-1">
-                    <div className="mb-6 md:mb-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
                       <label htmlFor="routingNumber" className="block font-semibold text-text-dark mb-2 text-sm">Routing Number *</label>
                       <input
                         type="text"
@@ -279,10 +279,10 @@ function Payment() {
                         value={wiseDetails.routingNumber}
                         onChange={(e) => setWiseDetails({ ...wiseDetails, routingNumber: e.target.value })}
                         required
-                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
+                        className="w-full py-2.5 sm:py-3 px-3 border-2 border-border rounded-lg text-sm sm:text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                       />
                     </div>
-                    <div className="mb-6 md:mb-0">
+                    <div>
                       <label htmlFor="swiftCode" className="block font-semibold text-text-dark mb-2 text-sm">SWIFT Code *</label>
                       <input
                         type="text"
@@ -291,12 +291,12 @@ function Payment() {
                         value={wiseDetails.swiftCode}
                         onChange={(e) => setWiseDetails({ ...wiseDetails, swiftCode: e.target.value })}
                         required
-                        className="w-full py-3 px-3 border-2 border-border rounded-lg text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
+                        className="w-full py-2.5 sm:py-3 px-3 border-2 border-border rounded-lg text-sm sm:text-base transition-all duration-300 font-inherit focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,144,226,0.1)] focus:outline-none"
                       />
                     </div>
                   </div>
 
-                  <button type="submit" className="py-4 px-8 bg-nature-gradient text-white border-none rounded-lg font-semibold text-lg cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg mt-4">
+                  <button type="submit" className="w-full sm:w-auto py-3 sm:py-4 px-6 sm:px-8 bg-nature-gradient text-white border-none rounded-lg font-semibold text-base sm:text-lg cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom-lg mt-4">
                     Submit Payment Details
                   </button>
                 </form>

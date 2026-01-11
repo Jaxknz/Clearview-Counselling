@@ -121,11 +121,17 @@ function Navbar() {
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
     } else {
       document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
     }
     return () => {
       document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
     }
   }, [mobileMenuOpen])
 
@@ -141,6 +147,7 @@ function Navbar() {
   }, [dropdownOpen])
 
   return (
+    <>
     <nav className="bg-white/95 backdrop-blur-[10px] shadow-[0_2px_8px_rgba(91,163,208,0.1)] sticky top-0 z-[1000] border-b border-[rgba(212,228,212,0.5)]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center w-full box-border">
         <Link to="/" className="no-underline text-text-dark flex items-center transition-transform duration-300 flex-shrink-0 hover:-translate-y-0.5" onClick={() => setMobileMenuOpen(false)}>
@@ -273,14 +280,35 @@ function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+    </nav>
+
+    {/* Mobile Menu Overlay - Outside nav to avoid container constraints */}
+    {mobileMenuOpen && (
+      <div
+        className="lg:hidden fixed inset-0 bg-black/50 z-[10002]"
+        style={{ top: '73px' }}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+    )}
+
+    {/* Mobile Menu - Outside nav to avoid container constraints */}
+    {mobileMenuOpen && (
       <div
         ref={mobileMenuRef}
-        className={`lg:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-white z-[999] transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-lg ${
-          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className="lg:hidden fixed bg-white z-[10003] shadow-2xl flex flex-col"
+        style={{ 
+          top: '73px',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          overflowX: 'hidden'
+        }}
       >
-        <div className="flex flex-col p-6 space-y-1">
+        <div className="flex flex-col p-4 sm:p-6 space-y-1 w-full bg-white flex-1">
           <Link
             to="/"
             className="text-text-dark font-medium py-3 px-4 rounded-lg transition-colors duration-300 hover:bg-primary/10 hover:text-primary no-underline"
@@ -376,15 +404,8 @@ function Navbar() {
           )}
         </div>
       </div>
-
-      {/* Mobile Menu Overlay - positioned behind menu */}
-      <div
-        className={`lg:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-black/50 z-[998] transition-opacity duration-300 ${
-          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setMobileMenuOpen(false)}
-      />
-    </nav>
+    )}
+    </>
   )
 }
 

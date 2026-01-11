@@ -366,13 +366,13 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">My Profile</h1>
-        <p className="text-lg text-text-light">Update your personal information</p>
+    <div className="min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 bg-bg-light">
+      <div className="text-center mb-6 sm:mb-8 px-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">My Profile</h1>
+        <p className="text-base sm:text-lg text-text-light">Update your personal information</p>
       </div>
 
-      <div className="max-w-3xl mx-auto bg-white p-12 md:p-8 rounded-2xl shadow-custom-lg">
+      <div className="max-w-3xl mx-auto bg-white p-6 sm:p-8 lg:p-12 rounded-2xl shadow-custom-lg">
         <form onSubmit={handleSubmit} className="w-full">
           {message && (
             <div className={`p-4 rounded-lg mb-6 text-center font-medium ${
@@ -385,7 +385,7 @@ function Profile() {
           )}
 
           <div className="mb-8">
-            <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Profile Photo</h2>
+            <h2 className="text-text-dark text-2xl sm:text-3xl lg:text-3xl mb-4 sm:mb-6 pb-2 sm:pb-3 border-b-2 border-border">Profile Photo</h2>
             <div className="flex items-start gap-8 p-6 bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 rounded-xl border border-primary/20 md:flex-col md:items-center md:text-center">
               <div className="flex-shrink-0">
                 <Avatar
@@ -428,7 +428,7 @@ function Profile() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Personal Information</h2>
+            <h2 className="text-text-dark text-2xl sm:text-3xl lg:text-3xl mb-4 sm:mb-6 pb-2 sm:pb-3 border-b-2 border-border">Personal Information</h2>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 mb-6 md:grid-cols-1">
               <div className="flex flex-col">
                 <label htmlFor="firstName" className="font-semibold text-text-dark mb-2 text-sm">First Name *</label>
@@ -492,7 +492,7 @@ function Profile() {
         </form>
 
         <div className="mt-12 pt-8 border-t-2 border-border">
-          <h2 className="text-text-dark text-3xl md:text-2xl mb-6 pb-3 border-b-2 border-border">Change Password</h2>
+          <h2 className="text-text-dark text-2xl sm:text-3xl lg:text-3xl mb-4 sm:mb-6 pb-2 sm:pb-3 border-b-2 border-border">Change Password</h2>
           {!showPasswordChange ? (
             <button
               type="button"

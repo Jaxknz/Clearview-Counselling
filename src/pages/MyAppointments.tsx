@@ -338,15 +338,15 @@ function MyAppointments() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] p-8 md:p-4 bg-bg-light">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-3xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">My Appointments</h1>
-        <p className="text-lg text-text-light">View and manage your scheduled appointments</p>
+    <div className="min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 bg-bg-light">
+      <div className="text-center mb-6 sm:mb-8 px-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-4xl font-bold mb-2 bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">My Appointments</h1>
+        <p className="text-base sm:text-lg text-text-light">View and manage your scheduled appointments</p>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white p-10 md:p-6 rounded-2xl shadow-custom-lg">
-        <div className="flex justify-between items-center mb-8 pb-6 border-b-2 border-border flex-wrap gap-4 md:flex-col md:items-stretch">
-        <div className="flex gap-4 flex-wrap md:w-full">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 bg-white p-6 sm:p-8 lg:p-10 rounded-2xl shadow-custom-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 sm:mb-8 pb-4 sm:pb-6 border-b-2 border-border gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-wrap">
           <button
             className={`py-3 px-6 rounded-lg font-semibold text-text-dark cursor-pointer transition-all duration-300 border-2 ${
               filter === 'all' 
@@ -379,7 +379,7 @@ function MyAppointments() {
           </button>
         </div>
         <button
-          className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 whitespace-nowrap hover:-translate-y-0.5 hover:shadow-custom md:w-full"
+          className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm cursor-pointer transition-all duration-300 whitespace-nowrap hover:-translate-y-0.5 hover:shadow-custom"
           onClick={() => setShowBookingForm(!showBookingForm)}
         >
           {showBookingForm ? 'Cancel Booking' : '+ Request Appointment'}
@@ -387,8 +387,8 @@ function MyAppointments() {
       </div>
 
         {showBookingForm && (
-          <div className="mb-8 p-8 bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 rounded-xl border-2 border-primary/20">
-            <h2 className="mt-0 mb-6 text-text-dark text-2xl md:text-xl">Book New Appointment</h2>
+          <div className="mb-6 sm:mb-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-primary/10 via-sky/10 to-nature-green/10 rounded-xl border-2 border-primary/20">
+            <h2 className="mt-0 mb-4 sm:mb-6 text-text-dark text-xl sm:text-2xl lg:text-2xl">Book New Appointment</h2>
             <form onSubmit={handleBookAppointment} className="flex flex-col gap-6">
               <div className="flex flex-col gap-2">
                 <label htmlFor="bookingType" className="font-semibold text-text-dark text-sm">Appointment Type *</label>
@@ -446,10 +446,10 @@ function MyAppointments() {
                 />
               </div>
 
-              <div className="flex gap-4 justify-end mt-2 md:flex-col">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end mt-2">
                 <button
                   type="button"
-                  className="py-3 px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:border-text-dark hover:bg-text-light hover:text-white md:w-full"
+                  className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-bg-light text-text-dark border-2 border-border rounded-lg font-semibold text-sm sm:text-base cursor-pointer transition-all duration-300 hover:border-text-dark hover:bg-text-light hover:text-white"
                   onClick={() => {
                     setShowBookingForm(false)
                     setBookingDate('')
@@ -461,7 +461,7 @@ function MyAppointments() {
                 </button>
                 <button
                   type="submit"
-                  className="py-3 px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none md:w-full"
+                  className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-nature-gradient text-white border-none rounded-lg font-semibold text-sm sm:text-base cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-custom disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
                   disabled={bookingLoading}
                 >
                   {bookingLoading ? 'Booking...' : 'Request Appointment'}
@@ -506,14 +506,14 @@ function MyAppointments() {
                       : 'border-border'
                   } hover:shadow-custom hover:border-primary`}
                 >
-                  <div className="flex justify-between items-start mb-4 flex-wrap gap-4 md:flex-col">
-                    <div className="flex-1">
-                      <div className="text-xl font-bold text-text-dark mb-1">{formatDate(appointment.date)}</div>
-                      <div className="text-lg text-primary font-semibold mb-1">{formatTime(appointment.time)}</div>
-                      <div className="text-sm text-text-light">Duration: {appointment.duration} min</div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-lg sm:text-xl font-bold text-text-dark mb-1 break-words">{formatDate(appointment.date)}</div>
+                      <div className="text-base sm:text-lg text-primary font-semibold mb-1">{formatTime(appointment.time)}</div>
+                      <div className="text-xs sm:text-sm text-text-light">Duration: {appointment.duration} min</div>
                     </div>
                     <div className="flex-shrink-0">
-                      <span className={`py-2 px-4 rounded-full text-sm font-semibold ${
+                      <span className={`inline-block py-1.5 sm:py-2 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-semibold ${
                         status === 'pending' 
                           ? 'bg-[#fff8e8] text-[#b8860b]'
                           : status === 'confirmed'
@@ -552,9 +552,9 @@ function MyAppointments() {
                         <strong className="block mb-2 text-base text-[#2e7d32]">Status: Confirmed</strong>
                         <p className="m-0 text-sm leading-relaxed">This appointment has been confirmed. We look forward to meeting with you!</p>
                       </div>
-                      <div className="flex gap-4 mt-4 pt-4 border-t border-border flex-wrap md:flex-col">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 pt-4 border-t border-border">
                         <button
-                          className="py-3 px-6 bg-[#e57373] text-white border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom md:w-full"
+                          className="w-full sm:w-auto py-2.5 sm:py-3 px-5 sm:px-6 bg-[#e57373] text-white border-none rounded-lg font-semibold text-sm sm:text-base cursor-pointer transition-all duration-300 hover:bg-[#ef5350] hover:-translate-y-0.5 hover:shadow-custom"
                           onClick={() => handleCancelAppointment(appointment.id)}
                         >
                           Cancel Appointment
